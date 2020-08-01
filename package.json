@@ -1,0 +1,15 @@
+{
+  "name": "charm-mm",
+  "version": "0.0.0",
+  "description": "CharmMM",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  },
+  "dependencies": {
+    "image-size": "^0.8.3",
+    "jimp": "^0.14.0",
+    "systeminformation": "^4.26.10",
+    "wallpaper": "^4.4.1"
+  }
+}
