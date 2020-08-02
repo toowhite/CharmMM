@@ -106,3 +106,5 @@ dist
 .vs/
 .jpg
 bin/
+_tmp.jpg
+obj/

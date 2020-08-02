@@ -6,10 +6,9 @@ const fs = require('fs');
 const sizeOf = require('image-size');
 const path = require('path');
 const wp = require('wallpaper');
+const config = require('./config.json');
 
-const PATH = "C:/Users/lzw21/OneDrive/Pictures/Feet";
-
-async function getWallpaperSize(displays) {
+function getWallpaperSize(displays) {
     
     let height = 0;
     let width = 0;
@@ -27,9 +26,9 @@ function shuffle(array) {
     array.sort(() => Math.random() - 0.5);
 }
 
-async function generateWallpaper(displays) {
-    let size = await getWallpaperSize(displays);
-    let image = new Jimp(size.w, size.h, '#000000');
+async function generateWallpaper(size, displays) {
+    
+    let image = new Jimp(size.w, size.h, config.BackgroundColor);
 
     let pics = [];
     let w = 0;
@@ -40,14 +39,14 @@ async function generateWallpaper(displays) {
             pic = randomPick(display.currentResX == 1920 && display.currentResY == 1080);
         while (pics.includes(pic));
         pics.push(pic);
-        let picData = await Jimp.read(path.join(PATH, pic));
+        let picData = await Jimp.read(path.join(config.PictureFolder, pic));
         image.composite(picData, w, h);
         w += Math.abs(display.positionX);
         h += Math.abs(display.positionY);
     }
     //console.log(pics);
 
-    let fullpath = path.join(__dirname, "tmp.jpg");
+    let fullpath = path.join(__dirname, "_tmp.jpg");
     image.write(fullpath);
     return fullpath;
 }
@@ -63,11 +62,11 @@ function isHorizontal(size) {
 }
 
 function randomPick(pickHorizonal = true) {
-    let files = fs.readdirSync(PATH);
+    let files = fs.readdirSync(config.PictureFolder);
     shuffle(files);
     //console.log(files);
     for (let file of files) {
-        let size = sizeOf(path.join(PATH, file));
+        let size = sizeOf(path.join(config.PictureFolder, file));
 
         if (pickHorizonal && isHorizontal(size)) {
             return file;
@@ -76,19 +75,23 @@ function randomPick(pickHorizonal = true) {
             return file;
         }
     }
-    throw Error('No available image');
+    throw new Error('No available image');
 }
 
+process.on('uncaughtException', function (err) {
+    console.error(err);
+    process.exit(1);
+});
 
 
 (async () => {
     let graphics = await si.graphics();
     let displays = graphics.displays;
-    console.log(displays);
-    let tmpFilepath = await generateWallpaper(displays);
-    wp.set(tmpFilepath);
+    let size = getWallpaperSize(displays);
 
-    console.log("Program ends.");
+    let tmpFilepath = await generateWallpaper(size, displays);
+    console.log(displays);
+    wp.set(tmpFilepath);
 })();
 
 
