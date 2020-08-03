@@ -35,9 +35,11 @@ async function generateWallpaper(size, displays) {
     let h = 0;
     for (let display of displays) {
         let pic;
-        do
-            pic = randomPick(display.currentResX == 1920 && display.currentResY == 1080);
-        while (pics.includes(pic));
+        do {
+            let ratio = display.currentResX / display.currentResY;
+            let horizontalDisplay = ratio > 1.6 && ratio < 1.8;
+            pic = randomPick(horizontalDisplay);
+        } while (pics.includes(pic));
         pics.push(pic);
         let picData = await Jimp.read(path.join(config.PictureFolder, pic));
         image.blit(picData, w, h, 0, 0, display.currentResX, display.currentResY);
