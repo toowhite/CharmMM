@@ -43,6 +43,7 @@ function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeigh
     let params = {}
     if (mode == 'center') {
         let scale = Math.max(displayWidth / picWidth, displayHeight / picHeight);
+        if (scale >= 0.9) scale = 1;
         params.x = (picWidth * scale - displayWidth) / 2;
         params.y = (picHeight * scale - displayHeight) / 2;
         params.w = displayWidth;
@@ -69,7 +70,9 @@ async function generateWallpaper(size, displays) {
         let picData = await Jimp.read(path.join(config.PictureFolder, picked.file));
         if (config.FitMode == "center") {
             let cp = getAdjustmentParameters(picked.correctedWidth, picked.correctedHeight, display.currentResX, display.currentResY, config.FitMode);
-            picData.scale(cp.scale);
+            if (cp.scale != 1) {
+                picData.scale(cp.scale);
+            }
             image.blit(picData, display.positionX, display.positionY, cp.x, cp.y, cp.w, cp.h);
         }
         else {
