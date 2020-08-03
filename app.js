@@ -8,15 +8,28 @@ const path = require('path');
 const wp = require('wallpaper');
 const config = require('./config.json');
 
-function getWallpaperSize(displays) {
+function getWallpaperSizeAndFixPositions(displays) {
     
     let height = 0;
     let width = 0;
+    let minPosX = Infinity;
+    let minPosY = Infinity;
     for (let display of displays) {
+        if (display.positionX < minPosX) {
+            minPosX = display.positionX;
+        }
+        if (display.positionY < minPosY) {
+            minPosY = display.positionY;
+        }
         if (display.currentResY > height) {
             height = display.currentResY;
         }
         width += display.currentResX;
+    }
+
+    for (let display of displays) {
+        display.positionX -= minPosX;
+        display.positionY -= minPosY;
     }
 
     return { h: height, w: width };
@@ -31,8 +44,6 @@ async function generateWallpaper(size, displays) {
     let image = new Jimp(size.w, size.h, config.BackgroundColor);
 
     let pics = [];
-    let w = 0;
-    let h = 0;
     for (let display of displays) {
         let pic;
         do {
@@ -42,9 +53,7 @@ async function generateWallpaper(size, displays) {
         } while (pics.includes(pic));
         pics.push(pic);
         let picData = await Jimp.read(path.join(config.PictureFolder, pic));
-        image.blit(picData, w, h, 0, 0, display.currentResX, display.currentResY);
-        w += Math.abs(display.positionX);
-        h += Math.abs(display.positionY);
+        image.blit(picData, display.positionX, display.positionY, 0, 0, display.currentResX, display.currentResY);
     }
     //console.log(pics);
 
@@ -90,7 +99,7 @@ process.on('uncaughtException', function (err) {
 (async () => {
     let graphics = await si.graphics();
     let displays = graphics.displays;
-    let size = getWallpaperSize(displays);
+    let size = getWallpaperSizeAndFixPositions(displays);
     let tmpFilepath = await generateWallpaper(size, displays);
 
     console.log(displays);
