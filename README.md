@@ -12,7 +12,7 @@ Either the wallpaper get cropped, or there is a lot of blank area on screen...
 This tool can help you get perfect wallpaper set. 
 
 ## Install instructions
-- Global dependencies is Node.js(14.x); run **npm install** to install project dependencies.
+- Run **npm install** to install project dependencies.
 - Set **PictureFolder** in *config.json* to the folder containing your wallpapers.
 - In Windows Background settings, **set *Choose a fit* option to *Tile***
   ![choose-fit](./choose-fit.png)
