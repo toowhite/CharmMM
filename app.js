@@ -40,7 +40,7 @@ async function generateWallpaper(size, displays) {
         while (pics.includes(pic));
         pics.push(pic);
         let picData = await Jimp.read(path.join(config.PictureFolder, pic));
-        image.composite(picData, w, h);
+        image.blit(picData, w, h, 0, 0, display.currentResX, display.currentResY);
         w += Math.abs(display.positionX);
         h += Math.abs(display.positionY);
     }
@@ -54,7 +54,7 @@ async function generateWallpaper(size, displays) {
 function isHorizontal(size) {
     let ratio = size.width / size.height;
     if (size.hasOwnProperty("orientation")) {
-        return 1.6 < ratio && ratio < 1.8 && size.orientation == 1;
+        return 1.6 < ratio && ratio < 1.8 && [1, 2, 3, 4].includes(size.orientation);
     }
     else {
         return 1.6 < ratio && ratio < 1.8;
@@ -68,10 +68,11 @@ function randomPick(pickHorizonal = true) {
     for (let file of files) {
         let size = sizeOf(path.join(config.PictureFolder, file));
 
-        if (pickHorizonal && isHorizontal(size)) {
+        let horizontal = isHorizontal(size);
+        if (pickHorizonal && horizontal) {
             return file;
         }
-        else if (!pickHorizonal && !isHorizontal(size)) {
+        else if (!pickHorizonal && !horizontal) {
             return file;
         }
     }
@@ -88,8 +89,8 @@ process.on('uncaughtException', function (err) {
     let graphics = await si.graphics();
     let displays = graphics.displays;
     let size = getWallpaperSize(displays);
-
     let tmpFilepath = await generateWallpaper(size, displays);
+
     console.log(displays);
     wp.set(tmpFilepath);
 })();
