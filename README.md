@@ -11,7 +11,7 @@ Either the wallpaper get cropped, or there is a lot of blank area on screen...
 
 This tool can help you get perfect wallpaper set. 
 
-## Install instructions
+## Installation
 - Run **npm install** to install project dependencies.
 - Set **PictureFolder** in *config.json* to the folder containing your wallpapers.
 - In Windows Background settings, **set *Choose a fit* option to *Tile***
@@ -21,4 +21,8 @@ This tool can help you get perfect wallpaper set.
 - Run *install.bat* to install the script as a task in Windows Task Scheduler.
 - Run *uninstall.bat* to uninstall.
 
+## Video demo
+//TODO
+
 ## [Lisence](./LICENSE)
+- Sample wallpapers are from https://www.pexels.com/.
