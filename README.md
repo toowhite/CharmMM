@@ -17,7 +17,7 @@ This tool can help you get perfect wallpaper set.
 - In Windows Background settings, **set *Choose a fit* option to *Tile***
   
   ![choose-fit](./choose-fit.png)
-- The default time interval to change background is 10 minutes, you can change that by changing *INTERVAL* variable in *install.bat*
+- The default time interval to change background is 10 minutes, you can change by setting *INTERVAL* variable in *install.bat*
 - Run *install.bat* to install the script as a task in Windows Task Scheduler.
 - Run *uninstall.bat* to uninstall.
 
