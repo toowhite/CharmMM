@@ -1,4 +1,5 @@
 {
-  "PictureFolder": "C:/Users/lzw21/OneDrive/Pictures",
-  "BackgroundColor": "#000000"
+  "PictureFolder": "./wallpapers",
+  "BackgroundColor": "#000000",
+  "FitMode":  "center"
 }
