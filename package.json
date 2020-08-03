@@ -1,10 +1,10 @@
 {
   "name": "charm-mm",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "CharmMM",
   "main": "app.js",
   "author": {
-    "name": ""
+    "name": "Chevy Li"
   },
   "dependencies": {
     "image-size": "^0.8.3",
