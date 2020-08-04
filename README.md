@@ -18,11 +18,12 @@ This tool can help you get perfect wallpaper set.
   
   ![choose-fit](./choose-fit.png)
 - The default time interval to change background is 10 minutes, you can change by setting *INTERVAL* variable in *install.bat*
-- Run *install.bat* to install the script as a task in Windows Task Scheduler; run *uninstall.bat* to uninstall.
-- Run *run_silently.vbs* to instantly change the wallpaper. You might what to create a desktop shortcut for it ;-)
+- Run *install.bat* to install the script as a job in Windows Task Scheduler, and create a desktop shortcut with the hotkey **CTRL+ALT+B**. 
+- Run *uninstall.bat* to uninstall.
 
 ## Video demo
 //TODO
 
 ## [Lisence](./LICENSE)
-- Sample wallpapers are from https://www.pexels.com/.
+- Sample wallpapers are from https://www.pexels.com/ under [this license](https://www.pexels.com/license/).
+- The shortcut icon is from https://iconarchive.com/ under [CC Attribution-Noncommercial 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
