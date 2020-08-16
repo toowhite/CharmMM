@@ -112,14 +112,14 @@ function randomPick(pickLandscape, minWidth, minHeight) {
         if (pickLandscape && landscapePic) {
             let w = Math.max(size.width, size.height);
             let h = Math.min(size.width, size.height);
-            if (w >= minWidth && h >= minHeight) {
+            if (w >= minWidth * 0.9 && h >= minHeight * 0.9) {
                 return { file: file, correctedWidth: w, correctedHeight: h };
             }
         }
         else if (!pickLandscape && !landscapePic) {
             let w = Math.min(size.width, size.height);
             let h = Math.max(size.width, size.height);
-            if (w >= minWidth && h >= minHeight) {
+            if (w >= minWidth * 0.9 && h >= minHeight * 0.9) {
                 return { file: file, correctedWidth: w, correctedHeight: h };
             }
         }
