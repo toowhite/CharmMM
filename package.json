@@ -2,6 +2,7 @@
   "name": "charm-mm",
   "version": "0.1.0",
   "description": "CharmMM",
+  "type": "module",
   "main": "app.js",
   "author": {
     "name": "Chevy Li"

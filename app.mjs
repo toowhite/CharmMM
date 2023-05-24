@@ -1,12 +1,16 @@
 'use strict';
 
 import {graphics as _graphics} from 'systeminformation';
-import Jimp, {read} from 'jimp';
+import Jimp from 'jimp';
 import {readdirSync} from 'fs';
 import sizeOf from 'image-size';
 import {join} from 'path';
-import {set} from 'wallpaper';
-import {BackgroundColor, PictureFolder, FitMode} from './config.json';
+import wallpaper from 'wallpaper';
+import config from './config.json' assert {
+  type: 'json'
+};
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 function getWallpaperSizeAndFixPositions(displays) {
   let height = 0;
@@ -54,7 +58,7 @@ function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeigh
 }
 
 async function generateWallpaper(size, displays) {
-  const image = new Jimp(size.w, size.h, BackgroundColor);
+  const image = new Jimp(size.w, size.h, config.BackgroundColor);
 
   const picks = [];
   for (const display of displays) {
@@ -65,9 +69,9 @@ async function generateWallpaper(size, displays) {
       picked = randomPick(landscapeDisplay, display.currentResX, display.currentResY);
     } while (picks.includes(picked));
     picks.push(picked);
-    const picData = await read(join(PictureFolder, picked.file));
-    if (FitMode == 'center') {
-      const cp = getAdjustmentParameters(picked.correctedWidth, picked.correctedHeight, display.currentResX, display.currentResY, FitMode);
+    const picData = await Jimp.read(join(config.PictureFolder, picked.file));
+    if (config.FitMode == 'center') {
+      const cp = getAdjustmentParameters(picked.correctedWidth, picked.correctedHeight, display.currentResX, display.currentResY, config.FitMode);
       if (cp.scale != 1) {
         picData.scale(cp.scale);
       }
@@ -77,6 +81,10 @@ async function generateWallpaper(size, displays) {
     }
   }
   // console.log(pics);
+
+  // Get the directory name
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
 
   const fullpath = join(__dirname, '_tmp.jpg');
   image.write(fullpath);
@@ -97,11 +105,11 @@ function landscapeRatio(ratio) {
 }
 
 function randomPick(pickLandscape, minWidth, minHeight) {
-  const files = readdirSync(PictureFolder);
+  const files = readdirSync(config.PictureFolder);
   shuffle(files);
   // console.log(files);
   for (const file of files) {
-    const size = sizeOf(join(PictureFolder, file));
+    const size = sizeOf(join(config.PictureFolder, file));
 
     const landscapePic = isLandscapePic(size);
     if (pickLandscape && landscapePic) {
@@ -134,7 +142,7 @@ process.on('uncaughtException', function(err) {
   const tmpFilepath = await generateWallpaper(size, displays);
 
   console.log(displays);
-  set(tmpFilepath);
+  wallpaper.set(tmpFilepath);
 })();
 
 
