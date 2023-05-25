@@ -60,15 +60,15 @@ function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeigh
 async function generateWallpaper(size, displays) {
   const image = new Jimp(size.w, size.h, config.BackgroundColor);
 
-  const picks = [];
+  const picks = new Set();
   for (const display of displays) {
+    const ratio = display.currentResX / display.currentResY;
+    const landscapeDisplay = landscapeRatio(ratio);
     let picked;
     do {
-      const ratio = display.currentResX / display.currentResY;
-      const landscapeDisplay = landscapeRatio(ratio);
-      picked = randomPick(landscapeDisplay, display.currentResX, display.currentResY);
-    } while (picks.includes(picked));
-    picks.push(picked);
+      picked = randomPick(landscapeDisplay, display.currentResX, display.currentResY)
+    } while (picks.has(picked));
+    picks.add(picked);
     const picData = await Jimp.read(join(config.PictureFolder, picked.file));
     if (config.FitMode == 'center') {
       const cp = getAdjustmentParameters(picked.correctedWidth, picked.correctedHeight, display.currentResX, display.currentResY, config.FitMode);
