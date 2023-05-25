@@ -1,2 +1,3 @@
 schtasks /delete /tn "CharmMM" /f
-del "%HOMEDRIVE%%HOMEPATH%\Desktop\Create background.lnk"
+set "desktopFolder=%USERPROFILE%\Desktop"
+del "%desktopFolder%\Change background.lnk"
