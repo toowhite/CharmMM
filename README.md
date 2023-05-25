@@ -21,6 +21,13 @@ This tool can help you get perfect wallpaper set.
 - Run *install.bat* to install the script as a job in Windows Task Scheduler, and create a desktop shortcut with the hotkey **CTRL+ALT+B**. 
 - Run *uninstall.bat* to uninstall.
 
+## Known issues
+1. If you change the "Scale and layout" in Display Settings of Windows, chance is the app will fail to set wallpapers correctly. 
+   
+    ![scale_and_layout](./scale_and_layout.png)
+  
+    Reason for that is the dependent [systeminformation](https://www.npmjs.com/package/systeminformation) library has some bug detecting graphics information. Hopefully it [will be fixed in the v6](https://github.com/sebhildebrandt/systeminformation/issues/346). 
+
 ## Video demo
 //TODO
 
