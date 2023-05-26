@@ -67,7 +67,7 @@ async function generateWallpaper(size, displays) {
     let picked;
     do {
       picked = randomPick(landscapeDisplay, display.currentResX, display.currentResY)
-    } while (picked in picks);
+    } while (picked.file in picks);
     picks[picked.file] = picked;
     const picData = await Jimp.read(join(config.PictureFolder, picked.file));
     if (config.FitMode == 'center') {
