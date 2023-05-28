@@ -12,9 +12,7 @@ import config from './config.json' assert {
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-function getWallpaperSizeAndFixPositions(displays) {
-  let height = 0;
-  let width = 0;
+function fixPositions(displays) {
   let minPosX = Infinity;
   let minPosY = Infinity;
   for (const display of displays) {
@@ -24,19 +22,30 @@ function getWallpaperSizeAndFixPositions(displays) {
     if (display.positionY < minPosY) {
       minPosY = display.positionY;
     }
-    if (display.currentResY > height) {
-      height = display.currentResY;
-    }
-    width += display.currentResX;
   }
 
   for (const display of displays) {
     display.positionX -= minPosX;
     display.positionY -= minPosY;
   }
-
-  return {h: height, w: width};
 }
+
+function getWallpaperSize(displays) {
+  let height = 0;
+  let width = 0;
+  for (const display of displays) {
+    if (display.positionX + display.currentResX > width) {
+      width = display.positionX + display.currentResX;
+    }
+
+    if (display.positionY + display.currentResY > height) {
+      height = display.positionY + display.currentResY;
+    }
+  }
+
+  return {"w": width, "h": height}
+}
+
 
 function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
@@ -138,10 +147,11 @@ process.on('uncaughtException', function(err) {
 (async () => {
   const graphics = await _graphics();
   const displays = graphics.displays;
-  const size = getWallpaperSizeAndFixPositions(displays);
-  const tmpFilepath = await generateWallpaper(size, displays);
-
+  fixPositions(displays);
+  const size = getWallpaperSize(displays);
   console.log(displays);
+  console.log(size)
+  const tmpFilepath = await generateWallpaper(size, displays);
   wallpaper.set(tmpFilepath);
 })();
 
