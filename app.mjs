@@ -5,12 +5,12 @@ import Jimp from 'jimp';
 import {readdirSync} from 'fs';
 import sizeOf from 'image-size';
 import {join} from 'path';
-import wallpaper from 'wallpaper';
 import config from './config.json' assert {
   type: 'json'
 };
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { exec } from 'child_process';
 
 function fixPositions(displays) {
   let minPosX = Infinity;
@@ -152,7 +152,12 @@ process.on('uncaughtException', function(err) {
   console.log(displays);
   console.log(size)
   const tmpFilepath = await generateWallpaper(size, displays);
-  wallpaper.set(tmpFilepath);
+  // wallpaper.set(tmpFilepath);
+  exec(`winwallpaper set ${tmpFilepath} --scale=tile`, (error, stdout, stderr) => {
+    if (error) console.error(`Error executing the command: ${error}`);
+    if (stdout) console.log(`Command output:\n${stdout}`);
+    if (stderr) console.error(`Command error:\n${stderr}`);
+  });
 })();
 
 
