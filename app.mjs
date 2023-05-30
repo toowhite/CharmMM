@@ -19,6 +19,8 @@ const exec = promisify(child_process.exec);
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
+let WALLPAPER_SUBFOLDER = "wallpapers";
+
 if ("Proxy" in config && config.Proxy)  {
   const proxyAgent = new ProxyAgent(config.Proxy);
   setGlobalDispatcher(proxyAgent);
@@ -104,7 +106,7 @@ async function generateWallpaper(size, displays) {
     let picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
     console.log(picked);
     let deviceName = display.deviceName.replace(/[\.\\]/g, '')
-    let dest = join(__dirname, "wallpapers", `${picked.id}_${deviceName}.jpg`);
+    let dest = join(__dirname, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
 
     if (!fs.existsSync(dest)) {
       await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
@@ -140,6 +142,13 @@ function landscapeRatio(ratio) {
   return 1.2 < ratio && ratio < 2;
 }
 
+
+function prepareWallpaperFolder() {
+  if (!fs.existsSync(WALLPAPER_SUBFOLDER)) {
+    fs.mkdirSync(WALLPAPER_SUBFOLDER);
+  }
+}
+
 process.on('uncaughtException', function(err) {
   console.error(err);
   process.exit(1);
@@ -147,6 +156,8 @@ process.on('uncaughtException', function(err) {
 
 
 (async () => {
+  prepareWallpaperFolder();
+
   const graphics = await _graphics();
   const displays = graphics.displays;
   fixPositions(displays);
