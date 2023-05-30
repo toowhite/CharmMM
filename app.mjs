@@ -55,12 +55,12 @@ function getWallpaperSize(displays) {
   let height = 0;
   let width = 0;
   for (const display of displays) {
-    if (display.positionX + display.currentResX > width) {
-      width = display.positionX + display.currentResX;
+    if (display.positionX + display.resolutionX > width) {
+      width = display.positionX + display.resolutionX;
     }
 
-    if (display.positionY + display.currentResY > height) {
-      height = display.positionY + display.currentResY;
+    if (display.positionY + display.resolutionY > height) {
+      height = display.positionY + display.resolutionY;
     }
   }
 
@@ -99,7 +99,7 @@ async function generateWallpaper(size, displays) {
   const image = new Jimp(size.w, size.h, config.BackgroundColor);
   
   for (const display of displays) {
-    const ratio = display.currentResX / display.currentResY;
+    const ratio = display.resolutionX / display.resolutionY;
     const landscapeDisplay = landscapeRatio(ratio);
 
     let picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
@@ -113,7 +113,7 @@ async function generateWallpaper(size, displays) {
     const picData = await Jimp.read(dest);
     // console.log(picData);
     if (config.FitMode == 'center') {
-      const cp = getAdjustmentParameters(picked.width, picked.height, display.currentResX, display.currentResY, config.FitMode);
+      const cp = getAdjustmentParameters(picked.width, picked.height, display.resolutionX, display.resolutionY, config.FitMode);
       if (cp.scale != 1) {
         picData.scale(cp.scale);
       }
