@@ -2,15 +2,36 @@
 
 import {graphics as _graphics} from 'systeminformation';
 import Jimp from 'jimp';
-import {readdirSync} from 'fs';
-import sizeOf from 'image-size';
 import {join} from 'path';
 import config from './config.json' assert {
   type: 'json'
 };
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { exec } from 'child_process';
+import child_process from 'child_process';
+import { createClient } from 'pexels';
+import { promisify } from 'util';
+import { setGlobalDispatcher, ProxyAgent } from 'undici';
+import fs from 'fs';
+import { setWallpaper } from 'wallpaper';
+
+const exec = promisify(child_process.exec);
+
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+const proxyAgent = new ProxyAgent(config.proxy);
+setGlobalDispatcher(proxyAgent);
+
+if (!("PEXELS_API_KEY" in process.env)) {
+  throw new Error("PEXELS_API_KEY is not set!");
+}
+let pexelsClient = createClient(process.env.PEXELS_API_KEY);
+
+const cachedJpegDecoder = Jimp.decoders['image/jpeg'];
+Jimp.decoders['image/jpeg'] = (data) => {
+  const userOpts = { maxMemoryUsageInMB: 1024 };
+  return cachedJpegDecoder(data, userOpts);
+}
 
 function fixPositions(displays) {
   let minPosX = Infinity;
@@ -46,11 +67,6 @@ function getWallpaperSize(displays) {
   return {"w": width, "h": height}
 }
 
-
-function shuffle(array) {
-  array.sort(() => Math.random() - 0.5);
-}
-
 function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeight, mode) {
   const params = {};
   if (mode == 'center') {
@@ -66,21 +82,38 @@ function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeigh
   return params;
 }
 
-async function generateWallpaper(size, displays) {
-  const image = new Jimp(size.w, size.h, config.BackgroundColor);
+async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
+  let result = await pexelsClient.photos.search({ 
+    per_page: poolSize, 
+    size: "large",
+    query: keyword,
+    orientation: landscapeDisplay ? "landscape" : "portrait"
+  });
+  
+  return result.photos[Math.floor(Math.random() * result.photos.length)];
+}
 
-  const picks = {};
+async function generateWallpaper(size, displays) {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const image = new Jimp(size.w, size.h, config.BackgroundColor);
+  
   for (const display of displays) {
     const ratio = display.currentResX / display.currentResY;
     const landscapeDisplay = landscapeRatio(ratio);
-    let picked;
-    do {
-      picked = randomPick(landscapeDisplay, display.currentResX, display.currentResY)
-    } while (picked.file in picks);
-    picks[picked.file] = picked;
-    const picData = await Jimp.read(join(config.PictureFolder, picked.file));
+
+    let picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
+    console.log(picked);
+    let deviceName = display.deviceName.replace(/[\.\\]/g, '')
+    let dest = join(__dirname, "wallpapers", `${picked.id}_${deviceName}.jpg`);
+
+    if (!fs.existsSync(dest)) {
+      await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
+    }
+    const picData = await Jimp.read(dest);
+    // console.log(picData);
     if (config.FitMode == 'center') {
-      const cp = getAdjustmentParameters(picked.correctedWidth, picked.correctedHeight, display.currentResX, display.currentResY, config.FitMode);
+      const cp = getAdjustmentParameters(picked.width, picked.height, display.currentResX, display.currentResY, config.FitMode);
       if (cp.scale != 1) {
         picData.scale(cp.scale);
       }
@@ -89,11 +122,6 @@ async function generateWallpaper(size, displays) {
       throw new Error('Unsupported fit mode');
     }
   }
-  // console.log(pics);
-
-  // Get the directory name
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
 
   const fullpath = join(__dirname, '_tmp.jpg');
   image.write(fullpath);
@@ -113,31 +141,6 @@ function landscapeRatio(ratio) {
   return 1.2 < ratio && ratio < 2;
 }
 
-function randomPick(pickLandscape, minWidth, minHeight) {
-  const files = readdirSync(config.PictureFolder);
-  shuffle(files);
-  // console.log(files);
-  for (const file of files) {
-    const size = sizeOf(join(config.PictureFolder, file));
-
-    const landscapePic = isLandscapePic(size);
-    if (pickLandscape && landscapePic) {
-      const w = Math.max(size.width, size.height);
-      const h = Math.min(size.width, size.height);
-      if (w >= minWidth * 0.9 && h >= minHeight * 0.9) {
-        return {file: file, correctedWidth: w, correctedHeight: h};
-      }
-    } else if (!pickLandscape && !landscapePic) {
-      const w = Math.min(size.width, size.height);
-      const h = Math.max(size.width, size.height);
-      if (w >= minWidth * 0.9 && h >= minHeight * 0.9) {
-        return {file: file, correctedWidth: w, correctedHeight: h};
-      }
-    }
-  }
-  throw new Error('No available image');
-}
-
 process.on('uncaughtException', function(err) {
   console.error(err);
   process.exit(1);
@@ -152,12 +155,7 @@ process.on('uncaughtException', function(err) {
   console.log(displays);
   console.log(size)
   const tmpFilepath = await generateWallpaper(size, displays);
-  // wallpaper.set(tmpFilepath);
-  exec(`winwallpaper set ${tmpFilepath} --scale=tile`, (error, stdout, stderr) => {
-    if (error) console.error(`Error executing the command: ${error}`);
-    if (stdout) console.log(`Command output:\n${stdout}`);
-    if (stderr) console.error(`Command error:\n${stderr}`);
-  });
+  await setWallpaper(tmpFilepath);
 })();
 
 
