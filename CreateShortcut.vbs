@@ -7,7 +7,6 @@ sLinkFile = desktopFolder & "\Change background.lnk"
 
 Set oLink = oWS.CreateShortcut(sLinkFile)
 oLink.TargetPath = currentDirectory & "\run_silently.vbs"
-oLink.HotKey = "ALT+CTRL+B"
 oLink.IconLocation = currentDirectory & "\icon.ico"
 oLink.WorkingDirectory = currentDirectory
 oLink.Save
