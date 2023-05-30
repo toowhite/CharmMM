@@ -1,8 +1,0 @@
-{
-  "PictureFolder": "./wallpapers",
-  "BackgroundColor": "#000000",
-  "FitMode":  "center",
-  "Keyword": "ocean",
-  "PoolSize": 20,
-  "proxy": "http://127.0.0.1:3128"
-}
