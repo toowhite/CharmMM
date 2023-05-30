@@ -108,3 +108,5 @@ dist
 bin/
 _tmp.jpg
 obj/
+
+wallpapers/*
