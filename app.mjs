@@ -19,13 +19,12 @@ const exec = promisify(child_process.exec);
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-const proxyAgent = new ProxyAgent(config.proxy);
-setGlobalDispatcher(proxyAgent);
-
-if (!("PEXELS_API_KEY" in process.env)) {
-  throw new Error("PEXELS_API_KEY is not set!");
+if ("Proxy" in config && config.Proxy)  {
+  const proxyAgent = new ProxyAgent(config.Proxy);
+  setGlobalDispatcher(proxyAgent);
 }
-let pexelsClient = createClient(process.env.PEXELS_API_KEY);
+
+let pexelsClient = createClient(config.PEXELS_API_KEY);
 
 const cachedJpegDecoder = Jimp.decoders['image/jpeg'];
 Jimp.decoders['image/jpeg'] = (data) => {

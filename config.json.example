@@ -1,0 +1,9 @@
+{
+  "PictureFolder": "./wallpapers",
+  "BackgroundColor": "#000000",
+  "FitMode":  "center",
+  "Keyword": "ocean",
+  "PoolSize": 20,
+  "Proxy": "http://127.0.0.1:1080",
+  "PEXELS_API_KEY": "set your pexels api key here"
+}
