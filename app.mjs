@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 
-import {graphics as _graphics} from 'systeminformation';
 import Jimp from 'jimp';
 import {join} from 'path';
 import { readFile } from 'fs/promises';
@@ -15,26 +14,40 @@ import fs from 'fs';
 import { setWallpaper } from 'wallpaper';
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
+import utils from './utils.mjs';
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const exec = promisify(child_process.exec);
 const print = console.log;
+const FILENAME = fileURLToPath(import.meta.url);
+const DIRNAME = dirname(FILENAME);
 const WALLPAPER_SUBFOLDER = "wallpapers";
 let pexelsClient;
 let config;
 
-// Working around memory limit issue of Jimp
+//Workaround for Error: maxMemoryUsageInMB limit exceeded by at least 109MB
 const cachedJpegDecoder = Jimp.decoders['image/jpeg'];
 Jimp.decoders['image/jpeg'] = (data) => {
-  const userOpts = { maxMemoryUsageInMB: 1024 };
+  const userOpts = { maxMemoryUsageInMB: 2048 };
   return cachedJpegDecoder(data, userOpts);
 }
 
 function fixPositions(displays) {
+  let scales;
+  if ("Scaling" in config && displays.length == config.Scaling.length) {
+    scales = config.Scaling;
+  }
+
   let minPosX = Infinity;
   let minPosY = Infinity;
-  for (const display of displays) {
+  for (let i =0; i < displays.length; i++) {
+    let display = displays[i];
+    display.resolutionX *= scales[i];
+    display.resolutionY *= scales[i];
+    display.positionX *= scales[0];
+    display.positionY *= scales[0];
+
     if (display.positionX < minPosX) {
       minPosX = display.positionX;
     }
@@ -92,8 +105,6 @@ async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
 }
 
 async function generateWallpaper(size, displays) {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
   const image = new Jimp(size.w, size.h, config.BackgroundColor);
   
   for (const display of displays) {
@@ -103,7 +114,7 @@ async function generateWallpaper(size, displays) {
     let picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
     print(picked);
     let deviceName = display.deviceName.replace(/[\.\\]/g, '')
-    let dest = join(__dirname, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
+    let dest = join(DIRNAME, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
 
     if (!fs.existsSync(dest)) {
       await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
@@ -121,7 +132,7 @@ async function generateWallpaper(size, displays) {
     }
   }
 
-  const fullpath = join(__dirname, '_tmp.jpg');
+  const fullpath = join(DIRNAME, '_tmp.jpg');
   image.write(fullpath);
   return fullpath;
 }
@@ -144,6 +155,13 @@ function prepareWallpaperFolder() {
   if (!fs.existsSync(WALLPAPER_SUBFOLDER)) {
     fs.mkdirSync(WALLPAPER_SUBFOLDER);
   }
+}
+
+async function getDisplayByPowershell() {
+  const rawLogs = await exec("powershell.exe GetDisplays.ps1");
+  let tmp = utils.rawDisplayLogsToDictionary(rawLogs.stdout);
+  
+  return tmp;
 }
 
 process.on('uncaughtException', function(err) {
@@ -172,11 +190,10 @@ process.on('uncaughtException', function(err) {
   pexelsClient = createClient(config.PEXELS_API_KEY);
 
   prepareWallpaperFolder();
-  const graphics = await _graphics();
-  const displays = graphics.displays;
+  const displays = await getDisplayByPowershell();
   fixPositions(displays);
-  const size = getWallpaperSize(displays);
   print(displays);
+  const size = getWallpaperSize(displays);
   print(size);
   const tmpFilepath = await generateWallpaper(size, displays);
   await setWallpaper(tmpFilepath);
