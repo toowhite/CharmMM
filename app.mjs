@@ -42,11 +42,14 @@ function fixPositions(displays) {
   let minPosX = Infinity;
   let minPosY = Infinity;
   for (let i =0; i < displays.length; i++) {
-    let display = displays[i];
-    display.resolutionX *= scales[i];
-    display.resolutionY *= scales[i];
-    display.positionX *= scales[0];
-    display.positionY *= scales[0];
+    const display = displays[i];
+
+    if (scales) {
+      display.resolutionX *= scales[i];
+      display.resolutionY *= scales[i];
+      display.positionX *= scales[0];
+      display.positionY *= scales[0];
+    }
 
     if (display.positionX < minPosX) {
       minPosX = display.positionX;
@@ -81,7 +84,7 @@ function getWallpaperSize(displays) {
 function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeight, mode) {
   const params = {};
   if (mode == 'center') {
-    let scale = Math.max(displayWidth / picWidth, displayHeight / picHeight);
+    const scale = Math.max(displayWidth / picWidth, displayHeight / picHeight);
     if (scale >= 0.9) scale = 1;
     params.x = (picWidth * scale - displayWidth) / 2;
     params.y = (picHeight * scale - displayHeight) / 2;
@@ -94,7 +97,7 @@ function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeigh
 }
 
 async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
-  let result = await pexelsClient.photos.search({ 
+  const result = await pexelsClient.photos.search({ 
     per_page: poolSize, 
     size: "large",
     query: keyword,
@@ -107,14 +110,20 @@ async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
 async function generateWallpaper(size, displays) {
   const image = new Jimp(size.w, size.h, config.BackgroundColor);
   
+  const pickedSet = new Set();
   for (const display of displays) {
     const ratio = display.resolutionX / display.resolutionY;
     const landscapeDisplay = landscapeRatio(ratio);
 
-    let picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
-    print(picked);
-    let deviceName = display.deviceName.replace(/[\.\\]/g, '')
-    let dest = join(DIRNAME, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
+    let picked;
+    do {
+      picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize)
+    } while (config.NoRepeat && picked.id in pickedSet);
+    pickedSet.add(picked.id);
+
+    print(`Will use wallpaper ${picked.src.original}`);
+    const deviceName = display.deviceName.replace(/[\.\\]/g, '')
+    const dest = join(DIRNAME, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
 
     if (!fs.existsSync(dest)) {
       await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
@@ -159,9 +168,7 @@ function prepareWallpaperFolder() {
 
 async function getDisplayByPowershell() {
   const rawLogs = await exec("powershell.exe GetDisplays.ps1");
-  let tmp = utils.rawDisplayLogsToDictionary(rawLogs.stdout);
-  
-  return tmp;
+  return utils.rawDisplayLogsToDictionary(rawLogs.stdout);
 }
 
 process.on('uncaughtException', function(err) {
