@@ -1,0 +1,17 @@
+# Specify your own Pexels API key here
+PEXELS_API_KEY: <your own key here>
+# Supported modes: https://sharp.pixelplumbing.com/api-resize
+FitMode: cover
+# Keywords to search for on pexels.com
+Keyword: barefoot girl
+# The random sampling size of the search result
+PoolSize: 20
+# Proxy server. Leave empty if you don't need it
+Proxy: http://127.0.0.1:1080
+# Set your own scaling manually, each line for a monitor
+Scaling:
+  - 1.0
+  - 1.5
+  - 2
+# If you want to use the same image twice, set this to false
+NoRepeat: true

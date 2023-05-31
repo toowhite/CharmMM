@@ -8,6 +8,7 @@
     "name": "Chevy Li"
   },
   "dependencies": {
+    "js-yaml": "^4.1.0",
     "pexels": "^1.4.0",
     "sharp": "^0.32.1",
     "undici": "^5.22.1",

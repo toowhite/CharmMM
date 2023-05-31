@@ -13,6 +13,7 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import utils from './utils.mjs';
 import sharp from 'sharp';
+import yaml from 'js-yaml';
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
@@ -96,7 +97,7 @@ async function generateWallpaper(size, displays) {
     create: {
       width: size.w,
       height: size.h,
-      background: config.BackgroundColor,
+      background: "#000000",
       channels: 4
     }
   });
@@ -166,7 +167,7 @@ process.on('uncaughtException', function(err) {
   const argv = yargs(hideBin(process.argv)).argv;
   if (argv.config)  {
     print(`Using config file: ${argv.config}`);
-    config = JSON.parse(fs.readFileSync(argv.config));
+    config = yaml.load(fs.readFileSync(argv.config, "utf-8"));
   }
   else {
     throw new Error("Config file path not specified!");
