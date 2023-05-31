@@ -8,8 +8,8 @@
     "name": "Chevy Li"
   },
   "dependencies": {
-    "jimp": "^0.14.0",
     "pexels": "^1.4.0",
+    "sharp": "^0.32.1",
     "undici": "^5.22.1",
     "wallpaper": "^6.1.1",
     "yargs": "^17.7.2"

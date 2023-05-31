@@ -1,9 +1,6 @@
 #!/usr/bin/env node
-'use strict';
 
-import Jimp from 'jimp';
 import {join} from 'path';
-import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import child_process from 'child_process';
@@ -15,6 +12,7 @@ import { setWallpaper } from 'wallpaper';
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import utils from './utils.mjs';
+import sharp from 'sharp';
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
@@ -23,15 +21,10 @@ const print = console.log;
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
 const WALLPAPER_SUBFOLDER = "wallpapers";
+const DEFINED_SHARP_FIT_MODE = ["cover", "contain", "fill", "inside", "outside"];
+
 let pexelsClient;
 let config;
-
-//Workaround for Error: maxMemoryUsageInMB limit exceeded by at least 109MB
-const cachedJpegDecoder = Jimp.decoders['image/jpeg'];
-Jimp.decoders['image/jpeg'] = (data) => {
-  const userOpts = { maxMemoryUsageInMB: 2048 };
-  return cachedJpegDecoder(data, userOpts);
-}
 
 function fixPositions(displays) {
   let scales;
@@ -81,20 +74,7 @@ function getWallpaperSize(displays) {
   return {"w": width, "h": height}
 }
 
-function getAdjustmentParameters(picWidth, picHeight, displayWidth, displayHeight, mode) {
-  const params = {};
-  if (mode == 'center') {
-    const scale = Math.max(displayWidth / picWidth, displayHeight / picHeight);
-    if (scale >= 0.9) scale = 1;
-    params.x = (picWidth * scale - displayWidth) / 2;
-    params.y = (picHeight * scale - displayHeight) / 2;
-    params.w = displayWidth;
-    params.h = displayHeight;
-    params.scale = scale;
-  }
 
-  return params;
-}
 
 async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
   const result = await pexelsClient.photos.search({ 
@@ -108,9 +88,17 @@ async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
 }
 
 async function generateWallpaper(size, displays) {
-  const image = new Jimp(size.w, size.h, config.BackgroundColor);
+  let image = sharp({
+    create: {
+      width: size.w,
+      height: size.h,
+      background: config.BackgroundColor,
+      channels: 3
+    }
+  });
   
   const pickedSet = new Set();
+  const compositeArray = [];
   for (const display of displays) {
     const ratio = display.resolutionX / display.resolutionY;
     const landscapeDisplay = landscapeRatio(ratio);
@@ -121,44 +109,36 @@ async function generateWallpaper(size, displays) {
     } while (config.NoRepeat && picked.id in pickedSet);
     pickedSet.add(picked.id);
 
-    print(`Will use wallpaper ${picked.src.original}`);
     const deviceName = display.deviceName.replace(/[\.\\]/g, '')
+    print(`${deviceName} will use wallpaper ${picked.src.original}`);
+    
     const dest = join(DIRNAME, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
-
     if (!fs.existsSync(dest)) {
       await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
     }
-    const picData = await Jimp.read(dest);
-    // print(picData);
-    if (config.FitMode == 'center') {
-      const cp = getAdjustmentParameters(picked.width, picked.height, display.resolutionX, display.resolutionY, config.FitMode);
-      if (cp.scale != 1) {
-        picData.scale(cp.scale);
-      }
-      image.blit(picData, display.positionX, display.positionY, cp.x, cp.y, cp.w, cp.h);
+    if (DEFINED_SHARP_FIT_MODE.includes(config.FitMode)) {
+      const picData = await sharp(dest).resize(display.resolutionX, display.resolutionY, {
+        fit: config.FitMode
+      }).toBuffer();
+      compositeArray.push({
+        input: picData,
+        left: display.positionX,
+        top: display.positionY
+      });
     } else {
       throw new Error('Unsupported fit mode');
     }
   }
-
-  const fullpath = join(DIRNAME, '_tmp.jpg');
-  image.write(fullpath);
-  return fullpath;
-}
-
-function isLandscapePic(size) {
-  const ratio = size.width / size.height;
-  if (size.hasOwnProperty('orientation')) {
-    return landscapeRatio(ratio) && [1, 2, 3, 4].includes(size.orientation);
-  } else {
-    return landscapeRatio(ratio);
-  }
+  
+  const tmpFilePath = join(DIRNAME, '_tmp.jpg');
+  const info = await image.composite(compositeArray).toFile(tmpFilePath);
+  print(info);
+  return tmpFilePath;
 }
 
 function landscapeRatio(ratio) {
   return 1.2 < ratio && ratio < 2;
 }
-
 
 function prepareWallpaperFolder() {
   if (!fs.existsSync(WALLPAPER_SUBFOLDER)) {
@@ -181,11 +161,7 @@ process.on('uncaughtException', function(err) {
   const argv = yargs(hideBin(process.argv)).argv;
   if (argv.config)  {
     print(`Using config file: ${argv.config}`);
-    config = JSON.parse(
-      await readFile(
-        new URL(argv.config, import.meta.url)
-      )
-    );
+    config = JSON.parse(fs.readFileSync(argv.config));
   }
   else {
     throw new Error("Config file path not specified!");
