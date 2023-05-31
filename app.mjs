@@ -39,9 +39,13 @@ function fixPositions(displays) {
 
     if (scales) {
       display.resolutionX *= scales[i];
+      display.resolutionX = Math.ceil(display.resolutionX);
       display.resolutionY *= scales[i];
+      display.resolutionY = Math.ceil(display.resolutionY);
       display.positionX *= scales[0];
+      display.positionX = Math.ceil(display.positionX);
       display.positionY *= scales[0];
+      display.positionY = Math.ceil(display.positionY);
     }
 
     if (display.positionX < minPosX) {
@@ -63,11 +67,11 @@ function getWallpaperSize(displays) {
   let width = 0;
   for (const display of displays) {
     if (display.positionX + display.resolutionX > width) {
-      width = display.positionX + display.resolutionX;
+      width = Math.ceil(display.positionX + display.resolutionX);
     }
 
     if (display.positionY + display.resolutionY > height) {
-      height = display.positionY + display.resolutionY;
+      height = Math.ceil(display.positionY + display.resolutionY);
     }
   }
 
@@ -93,7 +97,7 @@ async function generateWallpaper(size, displays) {
       width: size.w,
       height: size.h,
       background: config.BackgroundColor,
-      channels: 3
+      channels: 4
     }
   });
   
@@ -147,7 +151,8 @@ function prepareWallpaperFolder() {
 }
 
 async function getDisplayByPowershell() {
-  const rawLogs = await exec("powershell.exe GetDisplays.ps1");
+  const scriptPath = join(DIRNAME, 'GetDisplays.ps1');
+  const rawLogs = await exec(`powershell.exe ${scriptPath}`);
   return utils.rawDisplayLogsToDictionary(rawLogs.stdout);
 }
 
