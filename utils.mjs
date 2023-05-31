@@ -64,7 +64,24 @@ function landscapeRatio(ratio) {
   return 1.2 < ratio && ratio < 2;
 }
 
+function getWallpaperSize(displays) {
+  let height = 0;
+  let width = 0;
+  for (const display of displays) {
+    if (display.positionX + display.resolutionX > width) {
+      width = Math.ceil(display.positionX + display.resolutionX);
+    }
+
+    if (display.positionY + display.resolutionY > height) {
+      height = Math.ceil(display.positionY + display.resolutionY);
+    }
+  }
+
+  return {'w': width, 'h': height};
+}
+
 export default {
   landscapeRatio,
   rawDisplayLogsToDictionary,
+  getWallpaperSize,
 };

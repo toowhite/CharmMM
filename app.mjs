@@ -18,6 +18,10 @@ import sharp from 'sharp';
 import yaml from 'js-yaml';
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+process.on('uncaughtException', function(err) {
+  console.error(err);
+  process.exit(1);
+});
 
 const exec = promisify(childProcess.exec);
 const print = console.log;
@@ -60,23 +64,6 @@ function fixPositions(displays) {
     display.positionY -= minPosY;
   }
 }
-
-function getWallpaperSize(displays) {
-  let height = 0;
-  let width = 0;
-  for (const display of displays) {
-    if (display.positionX + display.resolutionX > width) {
-      width = Math.ceil(display.positionX + display.resolutionX);
-    }
-
-    if (display.positionY + display.resolutionY > height) {
-      height = Math.ceil(display.positionY + display.resolutionY);
-    }
-  }
-
-  return {'w': width, 'h': height};
-}
-
 
 async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
   const result = await pexelsClient.photos.search({
@@ -150,11 +137,6 @@ async function getDisplayByPowershell() {
   return utils.rawDisplayLogsToDictionary(rawLogs.stdout);
 }
 
-process.on('uncaughtException', function(err) {
-  console.error(err);
-  process.exit(1);
-});
-
 
 (async () => {
   const argv = yargs(hideBin(process.argv)).argv;
@@ -174,7 +156,7 @@ process.on('uncaughtException', function(err) {
   const displays = await getDisplayByPowershell();
   fixPositions(displays);
   print(displays);
-  const size = getWallpaperSize(displays);
+  const size = utils.getWallpaperSize(displays);
   print(size);
   const tmpFilepath = await generateWallpaper(size, displays);
   await setWallpaper(tmpFilepath);
