@@ -1,11 +1,10 @@
+#!/usr/bin/env node
 'use strict';
 
 import {graphics as _graphics} from 'systeminformation';
 import Jimp from 'jimp';
 import {join} from 'path';
-import config from './config.json' assert {
-  type: 'json'
-};
+import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import child_process from 'child_process';
@@ -14,20 +13,18 @@ import { promisify } from 'util';
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import fs from 'fs';
 import { setWallpaper } from 'wallpaper';
-
-const exec = promisify(child_process.exec);
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-let WALLPAPER_SUBFOLDER = "wallpapers";
+const exec = promisify(child_process.exec);
+const print = console.log;
+const WALLPAPER_SUBFOLDER = "wallpapers";
+let pexelsClient;
+let config;
 
-if ("Proxy" in config && config.Proxy)  {
-  const proxyAgent = new ProxyAgent(config.Proxy);
-  setGlobalDispatcher(proxyAgent);
-}
-
-let pexelsClient = createClient(config.PEXELS_API_KEY);
-
+// Working around memory limit issue of Jimp
 const cachedJpegDecoder = Jimp.decoders['image/jpeg'];
 Jimp.decoders['image/jpeg'] = (data) => {
   const userOpts = { maxMemoryUsageInMB: 1024 };
@@ -104,7 +101,7 @@ async function generateWallpaper(size, displays) {
     const landscapeDisplay = landscapeRatio(ratio);
 
     let picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
-    console.log(picked);
+    print(picked);
     let deviceName = display.deviceName.replace(/[\.\\]/g, '')
     let dest = join(__dirname, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
 
@@ -112,7 +109,7 @@ async function generateWallpaper(size, displays) {
       await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
     }
     const picData = await Jimp.read(dest);
-    // console.log(picData);
+    // print(picData);
     if (config.FitMode == 'center') {
       const cp = getAdjustmentParameters(picked.width, picked.height, display.resolutionX, display.resolutionY, config.FitMode);
       if (cp.scale != 1) {
@@ -156,14 +153,31 @@ process.on('uncaughtException', function(err) {
 
 
 (async () => {
-  prepareWallpaperFolder();
+  const argv = yargs(hideBin(process.argv)).argv;
+  if (argv.config)  {
+    print(`Using config file: ${argv.config}`);
+    config = JSON.parse(
+      await readFile(
+        new URL(argv.config, import.meta.url)
+      )
+    );
+  }
+  else {
+    throw new Error("Config file path not specified!");
+  }
+  if ("Proxy" in config && config.Proxy)  {
+    setGlobalDispatcher(new ProxyAgent(config.Proxy));
+  }
+  
+  pexelsClient = createClient(config.PEXELS_API_KEY);
 
+  prepareWallpaperFolder();
   const graphics = await _graphics();
   const displays = graphics.displays;
   fixPositions(displays);
   const size = getWallpaperSize(displays);
-  console.log(displays);
-  console.log(size)
+  print(displays);
+  print(size);
   const tmpFilepath = await generateWallpaper(size, displays);
   await setWallpaper(tmpFilepath);
 })();
