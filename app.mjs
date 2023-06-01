@@ -13,7 +13,7 @@ import fs from 'fs';
 import {setWallpaper} from 'wallpaper';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import utils from './utils.mjs';
+import utils from './utils.js';
 import sharp from 'sharp';
 import yaml from 'js-yaml';
 
@@ -95,7 +95,7 @@ async function generateWallpaper(size, displays) {
     let picked;
     do {
       picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
-    } while (config.NoRepeat && picked.id in pickedSet);
+    } while (config.NoRepeat && pickedSet.has(picked.id));
     pickedSet.add(picked.id);
 
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
