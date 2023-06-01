@@ -3,7 +3,7 @@ PEXELS_API_KEY: <your own key here>
 # Supported modes: https://sharp.pixelplumbing.com/api-resize
 FitMode: cover
 # Keywords to search for on pexels.com
-Keyword: barefoot girl
+Keyword: south america
 # The random sampling size of the search result
 PoolSize: 20
 # Proxy server. Leave empty if you don't need it
