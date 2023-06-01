@@ -1,12 +1,10 @@
 {
   "name": "charm-mm",
-  "version": "0.2.0",
-  "description": "CharmMM",
+  "version": "1.0.0",
+  "description": "CharmMM is a tool to perfectly set Windows wallpaper on multi-monitors.",
   "type": "module",
   "main": "app.mjs",
-  "author": {
-    "name": "Chevy Li"
-  },
+  "author": "Chevy Li <lzw2182006@gmail.com>",
   "dependencies": {
     "js-yaml": "^4.1.0",
     "pexels": "^1.4.0",
@@ -21,10 +19,29 @@
     "eslint-config-google": "^0.14.0",
     "jest": "^29.5.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toowhite/CharmMM.git"
+  },
+  "bugs": {
+    "url": "https://github.com/toowhite/CharmMM/issues"
+  },
+  "homepage": "https://github.com/toowhite/CharmMM",
   "bin": {
-    "charm-mm": "./app.mjs"
+    "charm-mm": "app.mjs"
   },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest"
-  }
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [
+    "multi-monitors",
+    "pexels",
+    "wallpaper",
+    "desktop",
+    "Windows"
+  ],
+  "license": "MIT"
 }
