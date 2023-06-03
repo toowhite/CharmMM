@@ -133,7 +133,7 @@ function prepareWallpaperFolder() {
 
 async function getDisplayByPowershell() {
   const scriptPath = join(DIRNAME, 'GetDisplays.ps1');
-  const rawLogs = await exec(`powershell.exe ${scriptPath}`);
+  const rawLogs = await exec(`powershell.exe "${scriptPath}"`);
   return utils.rawDisplayLogsToDictionary(rawLogs.stdout);
 }
 
