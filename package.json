@@ -1,7 +1,7 @@
 {
   "name": "charm-mm",
   "version": "1.0.2",
-  "description": "CharmMM is a tool to perfectly set Windows wallpaper on multi-monitors.",
+  "description": "CharmMM is a tool to perfectly set Windows wallpaper on multi displays/monitors.",
   "type": "module",
   "main": "app.mjs",
   "author": "Chevy Li <lzw2182006@gmail.com>",
@@ -38,7 +38,8 @@
     "doc": "docs"
   },
   "keywords": [
-    "multi-monitors",
+    "multi monitors",
+    "multi displays",
     "pexels",
     "wallpaper",
     "desktop",

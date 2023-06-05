@@ -8,10 +8,10 @@ Keyword: south america
 PoolSize: 20
 # Proxy server. Leave empty if you don't need it
 Proxy: http://127.0.0.1:1080
-# Set your own scaling manually, each line for a monitor
+# Set your scaling, each line for a display, staring from Display 1
 Scaling:
   - 1.0
   - 1.5
   - 2
-# If you want to use the same image twice, set this to false
+# Should wallpapers be reused on displays
 NoRepeat: true
