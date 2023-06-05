@@ -31,7 +31,8 @@
     "charm-mm": "app.mjs"
   },
   "scripts": {
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "postinstall": "node scripts/postinstall.js"
   },
   "directories": {
     "doc": "docs"
