@@ -51,15 +51,6 @@ function asSystemInformationStyle(display) {
   return newObj;
 }
 
-function isLandscapePic(size) {
-  const ratio = size.width / size.height;
-  if (size.hasOwnProperty('orientation')) {
-    return landscapeRatio(ratio) && [1, 2, 3, 4].includes(size.orientation);
-  } else {
-    return landscapeRatio(ratio);
-  }
-}
-
 function landscapeRatio(ratio) {
   return 1.2 < ratio && ratio < 2;
 }
