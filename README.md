@@ -1,3 +1,8 @@
+![npm publish](https://github.com/toowhite/CharmMM/actions/workflows/npm-publish.yml/badge.svg)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/toowhite/CharmMM/issues)
+
+[![https://nodei.co/npm/charm-mm.png?downloads=true&downloadRank=true&stars=true](https://nodei.co/npm/charm-mm.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/charm-mm)
+
 # CharmMM
 
 CharmMM is a tool to perfectly set Windows wallpaper on multi monitors/displays. 
