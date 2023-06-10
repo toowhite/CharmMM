@@ -146,11 +146,14 @@ async function generateWallpaper(size, displays) {
   return tmpFilePath;
 }
 
-function prepareWallpaperFolder() {
+async function prepareWallpaperFolder() {
   if (!fs.existsSync(WALLPAPER_FOLDER)) {
     print('Wallpaper folder doesn\'t exist, creating one...');
     fs.mkdirSync(WALLPAPER_FOLDER);
   }
+  const wallpaperSize = await utils.dirSize(WALLPAPER_FOLDER);
+  print(`Wallpaper files occupies ${Math.round(wallpaperSize/1024/1024)} megabytes. If that's too much feel free to clean it up.
+   Wallpaper folder path: ${WALLPAPER_FOLDER}`);
 }
 
 async function getDisplayByPowershell() {
@@ -176,7 +179,7 @@ async function getDisplayByPowershell() {
 
   pexelsClient = createClient(config.PEXELS_API_KEY);
 
-  prepareWallpaperFolder();
+  await prepareWallpaperFolder();
   const displays = await getDisplayByPowershell();
   fixPositions(displays);
   print(displays);
