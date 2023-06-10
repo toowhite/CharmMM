@@ -16,6 +16,7 @@ import {hideBin} from 'yargs/helpers';
 import utils from './utils.js';
 import sharp from 'sharp';
 import yaml from 'js-yaml';
+import os from 'os';
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 process.on('uncaughtException', function(err) {
@@ -27,7 +28,7 @@ const exec = promisify(childProcess.exec);
 const print = console.log;
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
-const WALLPAPER_SUBFOLDER = 'wallpapers';
+const WALLPAPER_FOLDER = join(os.homedir(), 'Pictures', 'charm-mm-wallpapers');
 const DEFINED_SHARP_FIT_MODE = ['cover', 'contain', 'fill', 'inside', 'outside'];
 const MAX_PER_PAGE = 80; // according to Pexels documentations
 
@@ -121,7 +122,7 @@ async function generateWallpaper(size, displays) {
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
     print(`${deviceName} will use wallpaper ${picked.src.original}`);
 
-    const dest = join(DIRNAME, WALLPAPER_SUBFOLDER, `${picked.id}_${deviceName}.jpg`);
+    const dest = join(WALLPAPER_FOLDER, `${picked.id}_${deviceName}.jpg`);
     if (!fs.existsSync(dest)) {
       await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
     }
@@ -146,8 +147,9 @@ async function generateWallpaper(size, displays) {
 }
 
 function prepareWallpaperFolder() {
-  if (!fs.existsSync(WALLPAPER_SUBFOLDER)) {
-    fs.mkdirSync(WALLPAPER_SUBFOLDER);
+  if (!fs.existsSync(WALLPAPER_FOLDER)) {
+    print('Wallpaper folder doesn\'t exist, creating one...');
+    fs.mkdirSync(WALLPAPER_FOLDER);
   }
 }
 
