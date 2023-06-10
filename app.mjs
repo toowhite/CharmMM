@@ -29,6 +29,7 @@ const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
 const WALLPAPER_SUBFOLDER = 'wallpapers';
 const DEFINED_SHARP_FIT_MODE = ['cover', 'contain', 'fill', 'inside', 'outside'];
+const MAX_PER_PAGE = 80; // according to Pexels documentations
 
 let pexelsClient;
 let config;
@@ -65,15 +66,34 @@ function fixPositions(displays) {
   }
 }
 
-async function pickRandomPhoto(landscapeDisplay, keyword, poolSize) {
-  const result = await pexelsClient.photos.search({
-    per_page: poolSize,
+async function pickRandomPhoto(landscapeDisplay, keyword) {
+  const orientation = landscapeDisplay ? 'landscape' : 'portrait';
+
+  let result = await pexelsClient.photos.search({
+    per_page: MAX_PER_PAGE,
     size: 'large',
     query: keyword,
-    orientation: landscapeDisplay ? 'landscape' : 'portrait',
+    orientation: orientation,
+    page: 1,
   });
 
-  return result.photos[Math.floor(Math.random() * result.photos.length)];
+  const photoIndex = Math.floor(Math.random() * result.total_results);
+  const wantedPage = Math.floor(photoIndex / MAX_PER_PAGE) + 1;
+  const wantedIndexInPage = photoIndex % MAX_PER_PAGE;
+
+  print(`${result.total_results} photos found. Picked the ${photoIndex} th photo, therefore pick ${wantedIndexInPage} th in page ${wantedPage}`);
+
+  if (wantedPage != 1) {
+    result = await pexelsClient.photos.search({
+      per_page: MAX_PER_PAGE,
+      size: 'large',
+      query: keyword,
+      orientation: orientation,
+      page: wantedPage,
+    });
+  }
+
+  return result.photos[wantedIndexInPage];
 }
 
 async function generateWallpaper(size, displays) {
@@ -94,7 +114,7 @@ async function generateWallpaper(size, displays) {
 
     let picked;
     do {
-      picked = await pickRandomPhoto(landscapeDisplay, config.Keyword, config.PoolSize);
+      picked = await pickRandomPhoto(landscapeDisplay, config.Keyword);
     } while (config.NoRepeat && pickedSet.has(picked.id));
     pickedSet.add(picked.id);
 

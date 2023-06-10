@@ -4,8 +4,6 @@ PEXELS_API_KEY: <your own key here>
 FitMode: cover
 # Keywords to search for on pexels.com
 Keyword: south america
-# The random sampling size of the search result
-PoolSize: 20
 # Proxy server. Leave empty if you don't need it
 Proxy: http://127.0.0.1:1080
 # Set your scaling, each line for a display, staring from Display 1
