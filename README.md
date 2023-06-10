@@ -28,5 +28,24 @@ This tool can help you get perfect wallpaper set. The wallpapers are searched an
 ## To-dos
 See https://github.com/users/toowhite/projects/1
 
+## Troubleshooting
+### UnauthorizedAccess for running GetDisplays.ps1 script
+You get error like this:
+```
+... path/to/charm-mm...GetDisplays.ps1 : File C:\Users\Chevy Li\AppData\Roaming\npm\node_modules\charm-mm\GetDisplays.ps1 cannot
+be loaded because running scripts is disabled on this system. For more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:1
++ ... path/to/charm-mm... ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+```
+That's due to PowerShell execution restrictions. To solve, as suggested in the error message, you have to change the ExecutionPolicy of PowerShell. For example, change policy to AllSigned for current user by running this command in an  Powershell (running as Administrator):
+
+```
+Set-ExecutionPolicy -ExecutionPolicy AllSigned -Scope CurrentUser
+```
+
+
 ## License
 MIT License
