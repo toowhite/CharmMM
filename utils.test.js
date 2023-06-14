@@ -74,9 +74,3 @@ WorkingArea  : {X=-1440,Y=-764,Width=1080,Height=1920}`;
     },
   ]);
 });
-
-
-test('get sorted files by creation time', () => {
-  const wallpaperFolder = path.join(os.homedir(), 'Pictures', 'charm-mm-wallpapers').replace(/ /g, '` ');
-  const sortedFiles = utils.getFilesSortedByCreationTime(wallpaperFolder);
-});
