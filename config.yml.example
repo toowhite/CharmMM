@@ -13,3 +13,5 @@ Scaling:
   - 2
 # Should wallpapers be reused on displays
 NoRepeat: true
+# Maximum disk space for wallpapers in megabytes
+DiskStorageLimit: 100

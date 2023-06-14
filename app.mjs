@@ -145,17 +145,32 @@ async function generateWallpaper(size, displays) {
   return tmpFilePath;
 }
 
-async function prepareWallpaperFolder() {
+function prepare() {
   if (!fs.existsSync(WALLPAPER_FOLDER)) {
     print('Wallpaper folder doesn\'t exist, creating one...');
     fs.mkdirSync(WALLPAPER_FOLDER);
   }
-  const wallpaperSize = await utils.dirSize(WALLPAPER_FOLDER);
-  print(`Wallpaper files occupies ${Math.round(wallpaperSize/1024/1024)} megabytes. If that's too much feel free to clean it up.
-   Wallpaper folder path: ${WALLPAPER_FOLDER}`);
+
+  const wallpaperSize = utils.bytesToMegaBytes(utils.dirSize(WALLPAPER_FOLDER));
+  print(`Wallpaper folder path is ${WALLPAPER_FOLDER}, occupying ${wallpaperSize} MB`);
+
+  if (wallpaperSize > config.DiskStorageLimit) {
+    print(`wallpaper folder size exceeds limit ${config.DiskStorageLimit} MB, pruning...`);
+    prune();
+  }
 }
 
-async function getDisplayByPowershell() {
+function prune() {
+  const sortedFiles = utils.getFilesSortedByCreationTime(WALLPAPER_FOLDER);
+  let currSize = config.DiskStorageLimit;
+  do {
+    const file = sortedFiles.shift();
+    fs.unlinkSync(file.path);
+    currSize -= utils.bytesToMegaBytes(file.stats.size);
+  } while (currSize > config.DiskStorageLimit);
+}
+
+function getDisplayByPowershell() {
   const scriptPath = join(DIRNAME, 'GetDisplays.ps1').replace(/ /g, '` ');
   const command = `powershell.exe "${scriptPath}"`;
   print('Executing command: ' + command);
@@ -178,8 +193,8 @@ async function getDisplayByPowershell() {
 
   pexelsClient = createClient(config.PEXELS_API_KEY);
 
-  await prepareWallpaperFolder();
-  const displays = await getDisplayByPowershell();
+  prepare();
+  const displays = getDisplayByPowershell();
   fixPositions(displays);
   print(displays);
   const size = utils.getWallpaperSize(displays);

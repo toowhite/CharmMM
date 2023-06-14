@@ -1,4 +1,7 @@
+/* eslint-disable max-len */
 import utils from './utils.js';
+import os from 'os';
+import path from 'path';
 
 test('get wallpaper size', () => {
   const displays = [
@@ -70,4 +73,10 @@ WorkingArea  : {X=-1440,Y=-764,Width=1080,Height=1920}`;
       'resolutionY': 1920,
     },
   ]);
+});
+
+
+test('get sorted files by creation time', () => {
+  const wallpaperFolder = path.join(os.homedir(), 'Pictures', 'charm-mm-wallpapers').replace(/ /g, '` ');
+  const sortedFiles = utils.getFilesSortedByCreationTime(wallpaperFolder);
 });

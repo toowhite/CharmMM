@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 /* eslint-disable max-len */
-import {readdir, stat} from 'fs/promises';
-import {join} from 'path';
+import fs from 'fs';
+import path from 'path';
 
 function rawDisplayLogsToDictionary(inputText) {
   // Splitting the input text into individual lines
@@ -72,19 +72,49 @@ function getWallpaperSize(displays) {
   return {'w': width, 'h': height};
 }
 
-async function dirSize(dir) {
-  const files = await readdir( dir, {withFileTypes: true} );
-  const paths = files.map( async (file) => {
-    const path = join( dir, file.name );
-    if ( file.isDirectory() ) return await dirSize( path );
-    if ( file.isFile() ) {
-      const {size} = await stat( path );
-      return size;
-    }
+function dirSize(dir) {
+  const files = fs.readdirSync(dir, {withFileTypes: true});
+  let totalSize = 0;
 
-    return 0;
-  } );
-  return ( await Promise.all( paths ) ).flat( Infinity ).reduce( ( i, size ) => i + size, 0 );
+  files.forEach((file) => {
+    const filePath = path.join(dir, file.name);
+    if (file.isDirectory()) {
+      totalSize += dirSize(filePath);
+    } else if (file.isFile()) {
+      const {size} = fs.statSync(filePath);
+      totalSize += size;
+    }
+  });
+
+  return totalSize;
+}
+
+function getFilesSortedByCreationTime(folderPath) {
+  // Read folder contents synchronously
+  const files = fs.readdirSync(folderPath);
+  // Map file names to file paths
+  const filePaths = files.map((file) => path.join(folderPath, file));
+  // Get file stats for each file
+  const fileStats = filePaths.map((filePath) => {
+    try {
+      return {
+        path: filePath,
+        stats: fs.statSync(filePath),
+      };
+    } catch (err) {
+      console.error('Error getting file stats:', err);
+      return null;
+    }
+  });
+  // Filter out any files that couldn't be read
+  const validFileStats = fileStats.filter((fileStat) => fileStat !== null);
+  // Sort files by creation time in ascending order
+  const sortedFiles = validFileStats.sort((a, b) => a.stats.ctimeMs - b.stats.ctimeMs);
+  return sortedFiles;
+}
+
+function bytesToMegaBytes(bytes) {
+  return Math.round(bytes / (1024 * 1024));
 }
 
 export default {
@@ -92,4 +122,6 @@ export default {
   rawDisplayLogsToDictionary,
   getWallpaperSize,
   dirSize,
+  getFilesSortedByCreationTime,
+  bytesToMegaBytes,
 };
