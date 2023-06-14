@@ -79,8 +79,6 @@ async function dirSize(dir) {
     if ( file.isDirectory() ) return await dirSize( path );
     if ( file.isFile() ) {
       const {size} = await stat( path );
-      // eslint-disable-next-line no-trailing-spaces
-      
       return size;
     }
 

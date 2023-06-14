@@ -5,9 +5,8 @@
 import {join} from 'path';
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
-import childProcess from 'child_process';
+import {execSync} from 'child_process';
 import {createClient} from 'pexels';
-import {promisify} from 'util';
 import {setGlobalDispatcher, ProxyAgent} from 'undici';
 import fs from 'fs';
 import {setWallpaper} from 'wallpaper';
@@ -24,7 +23,6 @@ process.on('uncaughtException', function(err) {
   process.exit(1);
 });
 
-const exec = promisify(childProcess.exec);
 const print = console.log;
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
@@ -122,9 +120,9 @@ async function generateWallpaper(size, displays) {
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
     print(`${deviceName} will use wallpaper ${picked.src.original}`);
 
-    const dest = join(WALLPAPER_FOLDER, `${picked.id}_${deviceName}.jpg`);
+    const dest = join(WALLPAPER_FOLDER, `${picked.id}.jpg`);
     if (!fs.existsSync(dest)) {
-      await exec(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
+      execSync(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
     }
     if (DEFINED_SHARP_FIT_MODE.includes(config.FitMode)) {
       const picData = await sharp(dest).resize(display.resolutionX, display.resolutionY, {
@@ -160,8 +158,8 @@ async function getDisplayByPowershell() {
   const scriptPath = join(DIRNAME, 'GetDisplays.ps1').replace(/ /g, '` ');
   const command = `powershell.exe "${scriptPath}"`;
   print('Executing command: ' + command);
-  const rawLogs = await exec(command);
-  return utils.rawDisplayLogsToDictionary(rawLogs.stdout);
+  const rawLogs = execSync(command);
+  return utils.rawDisplayLogsToDictionary(rawLogs.toString());
 }
 
 
