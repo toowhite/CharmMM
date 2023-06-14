@@ -120,8 +120,9 @@ async function generateWallpaper(size, displays) {
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
     print(`${deviceName} will use wallpaper ${picked.src.original}`);
 
-    const dest = join(WALLPAPER_FOLDER, `${picked.id}.jpg`);
+    let dest = join(WALLPAPER_FOLDER, `${picked.id}.jpg`);
     if (!fs.existsSync(dest)) {
+      dest = dest.replace(/ /g, '` ');
       execSync(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
     }
     if (DEFINED_SHARP_FIT_MODE.includes(config.FitMode)) {
