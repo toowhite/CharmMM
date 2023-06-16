@@ -180,13 +180,20 @@ function getDisplayByPowershell() {
 
 
 (async () => {
-  const argv = yargs(hideBin(process.argv)).argv;
-  if (argv.config) {
-    print(`Using config file: ${argv.config}`);
-    config = yaml.load(fs.readFileSync(argv.config, 'utf-8'));
-  } else {
-    throw new Error('Config file path not specified!');
-  }
+  const argv = yargs(hideBin(process.argv))
+      .usage('Usage: $0 --config <configFile>')
+      .strict(false) // Allow unknown options
+      .option('config', {
+        alias: 'c',
+        demandOption: true, // Make the parameter required
+        describe: 'Specify the configuration file',
+        type: 'string',
+      })
+      .argv;
+
+  print(`Using config file: ${argv.config}`);
+  config = yaml.load(fs.readFileSync(argv.config, 'utf-8'));
+
   if ('Proxy' in config && config.Proxy) {
     setGlobalDispatcher(new ProxyAgent(config.Proxy));
   }
