@@ -185,7 +185,7 @@ function getDisplayByPowershell() {
       .strict(false) // Allow unknown options
       .option('config', {
         alias: 'c',
-        demandOption: true, // Make the parameter required
+        demandOption: false, // Make the parameter required
         describe: 'Specify the configuration file',
         type: 'string',
       })
@@ -193,6 +193,18 @@ function getDisplayByPowershell() {
 
   print(`Using config file: ${argv.config}`);
   config = yaml.load(fs.readFileSync(argv.config, 'utf-8'));
+
+  for (const key in argv) {
+    if (key in config) {
+      try {
+        config[key] = JSON.parse(argv[key]);
+      } catch (SyntaxError) {
+        config[key] = argv[key];
+      }
+    }
+  }
+
+  print(config);
 
   if ('Proxy' in config && config.Proxy) {
     setGlobalDispatcher(new ProxyAgent(config.Proxy));
