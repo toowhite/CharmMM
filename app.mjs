@@ -109,6 +109,8 @@ async function generateWallpaper(size, displays) {
   const noRepeat = utils.readConfigItem(config, 'NoRepeat', true);
   const keyword = utils.readConfigItem(config, 'Keyword');
   const fitMode = utils.readConfigItem(config, 'FitMode', 'cover');
+  const useProxy = utils.readConfigItem(config, 'UseProxy', false);
+  const proxy = utils.readConfigItem(config, 'Proxy', 'placeholder');
 
   const pickedSet = new Set();
   const compositeArray = [];
@@ -133,6 +135,9 @@ async function generateWallpaper(size, displays) {
         '--header="Accept: text/html"',
         '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"',
       ];
+      if (useProxy) {
+        wgetCommand.push(`-e http_proxy=${proxy} -e https_proxy=${proxy}`);
+      }
       wgetCommand = wgetCommand.join(' ');
       print(`Executing command: ${wgetCommand}`);
       execSync(wgetCommand);
@@ -220,9 +225,9 @@ function getDisplayByPowershell() {
 
   print(config);
 
-  const proxy = utils.readConfigItem(config, 'Proxy', 'DO NOT USE PROXY');
-  if (proxy != 'DO NOT USE PROXY') {
-    setGlobalDispatcher(new ProxyAgent(proxy));
+  const useProxy = utils.readConfigItem(config, 'UseProxy', false);
+  if (useProxy) {
+    setGlobalDispatcher(new ProxyAgent(utils.readConfigItem(config, 'Proxy')));
   }
 
   pexelsClient = createClient(utils.readConfigItem(config, 'PEXELS_API_KEY'));

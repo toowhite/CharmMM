@@ -4,7 +4,9 @@ PEXELS_API_KEY: <your own key here>
 FitMode: cover
 # Keywords to search for on pexels.com
 Keyword: south america
-# Proxy server. Leave empty if you don't need it
+# If proxy should be enabled
+UseProxy: true
+# Proxy server.
 Proxy: http://127.0.0.1:1080
 # Set your scaling, each line for a display, staring from Display 1
 Scaling:
