@@ -123,7 +123,14 @@ async function generateWallpaper(size, displays) {
     let dest = join(WALLPAPER_FOLDER, `${picked.id}.jpg`);
     if (!fs.existsSync(dest)) {
       dest = dest.replace(/ /g, '` ');
-      execSync(`wget --header="Accept: text/html" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0" ${picked.src.original} -O ${dest}`);
+      let wgetCommand = [
+        'wget', picked.src.original, '-O', dest,
+        '--header="Accept: text/html"',
+        '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"',
+      ];
+      wgetCommand = wgetCommand.join(' ');
+      print(`Executing command: ${wgetCommand}`);
+      execSync(wgetCommand);
     }
     if (DEFINED_SHARP_FIT_MODE.includes(config.FitMode)) {
       const picData = await sharp(dest).resize(display.resolutionX, display.resolutionY, {
@@ -155,18 +162,19 @@ function prepare() {
   print(`Wallpaper folder path is ${WALLPAPER_FOLDER}, occupying ${wallpaperSize} MB`);
 
   if (wallpaperSize > config.DiskStorageLimit) {
-    print(`wallpaper folder size exceeds limit ${config.DiskStorageLimit} MB, pruning...`);
-    prune();
+    print(`wallpaper folder size (${wallpaperSize} MB) exceeds limit ${config.DiskStorageLimit} MB, pruning...`);
+    prune(wallpaperSize);
   }
 }
 
-function prune() {
+function prune(currSize) {
   const sortedFiles = utils.getFilesSortedByCreationTime(WALLPAPER_FOLDER);
-  let currSize = config.DiskStorageLimit;
   do {
     const file = sortedFiles.shift();
+    const sizeInMB = utils.bytesToMegaBytes(file.stats.size);
     fs.unlinkSync(file.path);
-    currSize -= utils.bytesToMegaBytes(file.stats.size);
+    print(`${file.path} deleted, saving ${sizeInMB}`);
+    currSize -= sizeInMB;
   } while (currSize > config.DiskStorageLimit);
 }
 
