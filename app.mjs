@@ -34,9 +34,9 @@ let pexelsClient;
 let config;
 
 function fixPositions(displays) {
-  let scales;
-  if ('Scaling' in config && displays.length == config.Scaling.length) {
-    scales = config.Scaling;
+  const scales = utils.readConfigItem(config, 'Scaling');
+  if (displays.length != scales.length) {
+    throw new Error('Mismatching scaling and display count');
   }
 
   let minPosX = Infinity;
@@ -105,6 +105,11 @@ async function generateWallpaper(size, displays) {
     },
   });
 
+  // read config items
+  const noRepeat = utils.readConfigItem(config, 'NoRepeat', true);
+  const keyword = utils.readConfigItem(config, 'Keyword');
+  const fitMode = utils.readConfigItem(config, 'FitMode', 'cover');
+
   const pickedSet = new Set();
   const compositeArray = [];
   for (const display of displays) {
@@ -113,8 +118,8 @@ async function generateWallpaper(size, displays) {
 
     let picked;
     do {
-      picked = await pickRandomPhoto(landscapeDisplay, config.Keyword);
-    } while (config.NoRepeat && pickedSet.has(picked.id));
+      picked = await pickRandomPhoto(landscapeDisplay, keyword);
+    } while (noRepeat && pickedSet.has(picked.id));
     pickedSet.add(picked.id);
 
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
@@ -132,9 +137,9 @@ async function generateWallpaper(size, displays) {
       print(`Executing command: ${wgetCommand}`);
       execSync(wgetCommand);
     }
-    if (DEFINED_SHARP_FIT_MODE.includes(config.FitMode)) {
+    if (DEFINED_SHARP_FIT_MODE.includes(fitMode)) {
       const picData = await sharp(dest).resize(display.resolutionX, display.resolutionY, {
-        fit: config.FitMode,
+        fit: fitMode,
       }).toBuffer();
       compositeArray.push({
         input: picData,
@@ -161,13 +166,14 @@ function prepare() {
   const wallpaperSize = utils.bytesToMegaBytes(utils.dirSize(WALLPAPER_FOLDER));
   print(`Wallpaper folder path is ${WALLPAPER_FOLDER}, occupying ${wallpaperSize} MB`);
 
-  if (wallpaperSize > config.DiskStorageLimit) {
-    print(`wallpaper folder size (${wallpaperSize} MB) exceeds limit ${config.DiskStorageLimit} MB, pruning...`);
+  const diskStorageLimit = utils.readConfigItem(config, 'DiskStorageLimit', 'NO LIMIT');
+  if (diskStorageLimit != 'NO LIMIT' && wallpaperSize > diskStorageLimit) {
+    print(`wallpaper folder size (${wallpaperSize} MB) exceeds limit ${diskStorageLimit} MB, pruning...`);
     prune(wallpaperSize);
   }
 }
 
-function prune(currSize) {
+function prune(currSize, diskStorageLimit) {
   const sortedFiles = utils.getFilesSortedByCreationTime(WALLPAPER_FOLDER);
   do {
     const file = sortedFiles.shift();
@@ -175,7 +181,7 @@ function prune(currSize) {
     fs.unlinkSync(file.path);
     print(`${file.path} deleted, saving ${sizeInMB}`);
     currSize -= sizeInMB;
-  } while (currSize > config.DiskStorageLimit);
+  } while (currSize > diskStorageLimit);
 }
 
 function getDisplayByPowershell() {
@@ -214,11 +220,12 @@ function getDisplayByPowershell() {
 
   print(config);
 
-  if ('Proxy' in config && config.Proxy) {
-    setGlobalDispatcher(new ProxyAgent(config.Proxy));
+  const proxy = utils.readConfigItem(config, 'Proxy', 'DO NOT USE PROXY');
+  if (proxy != 'DO NOT USE PROXY') {
+    setGlobalDispatcher(new ProxyAgent(proxy));
   }
 
-  pexelsClient = createClient(config.PEXELS_API_KEY);
+  pexelsClient = createClient(utils.readConfigItem(config, 'PEXELS_API_KEY'));
 
   prepare();
   const displays = getDisplayByPowershell();

@@ -117,6 +117,22 @@ function bytesToMegaBytes(bytes) {
   return Math.round(bytes / (1024 * 1024));
 }
 
+function readConfigItem(config, key, defaultValue = null) {
+  try {
+    if (key in config) {
+      return config[key];
+    } else {
+      throw new Error();
+    }
+  } catch (err) {
+    if (defaultValue != null) {
+      return defaultValue;
+    } else {
+      throw new Error('Config key not found: ' + key);
+    }
+  }
+}
+
 export default {
   landscapeRatio,
   rawDisplayLogsToDictionary,
@@ -124,4 +140,5 @@ export default {
   dirSize,
   getFilesSortedByCreationTime,
   bytesToMegaBytes,
+  readConfigItem,
 };

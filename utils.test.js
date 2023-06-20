@@ -1,7 +1,5 @@
 /* eslint-disable max-len */
 import utils from './utils.js';
-import os from 'os';
-import path from 'path';
 
 test('get wallpaper size', () => {
   const displays = [
@@ -73,4 +71,31 @@ WorkingArea  : {X=-1440,Y=-764,Width=1080,Height=1920}`;
       'resolutionY': 1920,
     },
   ]);
+});
+
+
+describe('read config item', () => {
+  let config;
+
+  beforeEach(() => {
+    config = {
+      key1: 'value1',
+      key2: 'value2',
+      key3: 'value3',
+    };
+  });
+
+  test('should return correct value if key is present', () => {
+    const result = utils.readConfigItem(config, 'key1');
+    expect(result).toEqual('value1');
+  });
+
+  test('should return default value if key is not present and default value is provided', () => {
+    const result = utils.readConfigItem(config, 'key4', 'defaultValue');
+    expect(result).toEqual('defaultValue');
+  });
+
+  test('should throw error if key is not present and no default value is provided', () => {
+    expect(() => utils.readConfigItem(config, 'key4')).toThrow('Config key not found: key4');
+  });
 });
