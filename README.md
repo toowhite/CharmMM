@@ -26,10 +26,19 @@ This tool can help you get perfect wallpaper set. The wallpapers are searched an
   ![choose-fit](docs/choose-fit.png)
 
 ## Installation
-- Run `npm install -g charm-mm` to install the package.
-- Usage: `charm-mm --config config.yml`. 
+`npm install -g charm-mm` 
+## Usage 
+  ```
+  charm-mm --config config.yml
+  ```
   Read *config.yml.sample* and modify it to create *config.yml*.
 
+  Any parameter defined in config.yml can be override at runtime with command line arguments. For example, to override scaling settings:
+  ```
+  charm-mm --config config.yml --Scaling [1.0, 2.0]
+  ```
+  
+  The options are **case-sensitive** and should match the keys in config.yml. 
 ## To-dos
 See https://github.com/users/toowhite/projects/1
 
@@ -53,4 +62,4 @@ Set-ExecutionPolicy -ExecutionPolicy AllSigned -Scope CurrentUser
 
 
 ## License
-MIT License
+[MIT License](./LICENSE)
