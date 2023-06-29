@@ -1,6 +1,5 @@
 ![npm publish](https://github.com/toowhite/CharmMM/actions/workflows/npm-publish.yml/badge.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/toowhite/CharmMM/issues)
-[![Build Status](https://app.travis-ci.com/toowhite/CharmMM.svg?branch=master)](https://app.travis-ci.com/toowhite/CharmMM)
 
 [![https://nodei.co/npm/charm-mm.png?downloads=true&downloadRank=true&stars=true](https://nodei.co/npm/charm-mm.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/charm-mm)
 
