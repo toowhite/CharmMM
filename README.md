@@ -39,8 +39,7 @@ This tool can help you get perfect wallpaper set. The wallpapers are searched an
   ```
   
   The options are **case-sensitive** and should match the keys in config.yml. 
-## To-dos
-See https://github.com/users/toowhite/projects/1
+## [Changelog](./CHANGELOG)
 
 ## Troubleshooting
 ### UnauthorizedAccess for running GetDisplays.ps1 script
