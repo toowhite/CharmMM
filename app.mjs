@@ -25,7 +25,7 @@ process.on('uncaughtException', function(err) {
 
 const print = console.log;
 const FILENAME = fileURLToPath(import.meta.url);
-const DIRNAME = dirname(FILENAME);
+const DIRNAME = dirname(FILENAME).replace(/ /g, '` ');
 const WALLPAPER_FOLDER = join(os.homedir(), 'Pictures', 'charm-mm-wallpapers');
 const DEFINED_SHARP_FIT_MODE = ['cover', 'contain', 'fill', 'inside', 'outside'];
 const MAX_PER_PAGE = 80; // according to Pexels documentations
@@ -38,7 +38,9 @@ function fixPositions(displays) {
   let minPosY = Infinity;
   for (let i = 0; i < displays.length; i++) {
     const d = displays[i];
-    const scale = execSync(`bin\\SetDpi.exe value ${i+1}`).toString();
+    const command = `${join(DIRNAME, 'bin', 'SetDpi.exe')} value ${i+1}`;
+    print('Executing command: ' + command);
+    const scale = execSync(command).toString();
     d.scale = parseInt(scale)/100;
     if (d.positionX < minPosX) {
       minPosX = d.positionX;
@@ -204,7 +206,7 @@ function prune(currSize, diskStorageLimit) {
 }
 
 function getDisplayByPowershell() {
-  const scriptPath = join(DIRNAME, 'GetDisplays.ps1').replace(/ /g, '` ');
+  const scriptPath = join(DIRNAME, 'GetDisplays.ps1');
   const command = `powershell.exe "${scriptPath}"`;
   print('Executing command: ' + command);
   const rawLogs = execSync(command);
