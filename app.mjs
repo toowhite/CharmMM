@@ -133,6 +133,7 @@ async function generateWallpaper(size, displays) {
         'wget', picked.src.original, '-O', `"${dest}"`,
         '--header="Accept: text/html"',
         '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"',
+        '--no-verbose',
       ];
       if (useProxy) {
         wgetCommand.push(`-e http_proxy=${proxy} -e https_proxy=${proxy}`);
@@ -183,7 +184,7 @@ function prune(currSize, diskStorageLimit) {
     const file = sortedFiles.shift();
     const sizeInMB = utils.bytesToMegaBytes(file.stats.size);
     fs.unlinkSync(file.path);
-    print(`${file.path} deleted, saving ${sizeInMB}`);
+    print(`${file.path} deleted, saving ${sizeInMB} MB`);
     currSize -= sizeInMB;
   } while (currSize > diskStorageLimit);
 }
@@ -203,21 +204,28 @@ function getDisplayByPowershell() {
       .strict(false) // Allow unknown options
       .option('config', {
         alias: 'c',
-        demandOption: false, // Make the parameter required
+        demandOption: false,
         describe: 'Specify the configuration file',
         type: 'string',
       })
       .argv;
-
+  argv.config = argv.config ? argv.config : 'config.yml';
   print(`Using config file: ${argv.config}`);
   config = yaml.load(fs.readFileSync(argv.config, 'utf-8'));
 
+  config = utils.lowerize(config);
+
   for (const key in argv) {
-    if (key in config) {
+    if (key.toLowerCase() in config) {
       try {
-        config[key] = JSON.parse(argv[key]);
+        // wrap the scaling factors if not in brackets
+        if (key.toLowerCase() == 'scaling' &&
+          !(argv[key].startsWith('[') && argv[key].endsWith(']'))) {
+          argv[key] = `[${argv[key]}]`;
+        }
+        config[key.toLowerCase()] = JSON.parse(argv[key]);
       } catch (SyntaxError) {
-        config[key] = argv[key];
+        config[key.toLowerCase()] = argv[key];
       }
     }
   }

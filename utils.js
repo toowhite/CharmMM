@@ -118,9 +118,11 @@ function bytesToMegaBytes(bytes) {
 }
 
 function readConfigItem(config, key, defaultValue = null) {
+  config = lowerize(config);
+
   try {
-    if (key in config) {
-      return config[key];
+    if (key.toLowerCase() in config) {
+      return config[key.toLowerCase()];
     } else {
       throw new Error();
     }
@@ -133,6 +135,14 @@ function readConfigItem(config, key, defaultValue = null) {
   }
 }
 
+// Thanks to https://www.30secondsofcode.org/js/s/lowerize/
+function lowerize(obj) {
+  return Object.keys(obj).reduce((acc, k) => {
+    acc[k.toLowerCase()] = obj[k];
+    return acc;
+  }, {});
+}
+
 export default {
   landscapeRatio,
   rawDisplayLogsToDictionary,
@@ -141,4 +151,5 @@ export default {
   getFilesSortedByCreationTime,
   bytesToMegaBytes,
   readConfigItem,
+  lowerize,
 };

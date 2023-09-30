@@ -99,3 +99,29 @@ describe('read config item', () => {
     expect(() => utils.readConfigItem(config, 'key4')).toThrow('Config key not found: key4');
   });
 });
+
+describe('lowerize keys of an object', () => {
+  test('Lowerize an empty object', () => {
+    const input = {};
+    const output = utils.lowerize(input);
+    expect(output).toEqual({});
+  });
+
+  test('Lowerize an object with mixed case keys', () => {
+    const input = {Name: 'John', Age: 30, email: 'john@example.com'};
+    const output = utils.lowerize(input);
+    expect(output).toEqual({name: 'John', age: 30, email: 'john@example.com'});
+  });
+
+  test('Lowerize an object with all lowercase keys', () => {
+    const input = {firstname: 'Alice', lastname: 'Smith', email: 'alice@example.com'};
+    const output = utils.lowerize(input);
+    expect(output).toEqual(input);
+  });
+
+  test('Lowerize an object with uppercase keys', () => {
+    const input = {FIRSTNAME: 'Bob', LASTNAME: 'Johnson', EMAIL: 'bob@example.com'};
+    const output = utils.lowerize(input);
+    expect(output).toEqual({firstname: 'Bob', lastname: 'Johnson', email: 'bob@example.com'});
+  });
+});
