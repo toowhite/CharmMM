@@ -39,42 +39,48 @@ function fixPositions(displays) {
     throw new Error('Mismatching scaling and display count');
   }
 
-  for (let i = 0; i < displays.length; i++) {
-    const display = displays[i];
-    display.scale = scales[i];
-
-    const oldResX = display.resolutionX;
-    const oldResY = display.resolutionY;
-    display.resolutionX = Math.floor(display.resolutionX * display.scale);
-    display.resolutionY = Math.floor(display.resolutionY * display.scale);
-
-    for (const anotherDisplay of displays) {
-      if (anotherDisplay.deviceName == display) {
-        continue;
-      }
-      if (display.positionX + oldResX == anotherDisplay.positionX) {
-        anotherDisplay.positionX = display.positionX + display.resolutionX;
-      }
-      if (display.positionY + oldResY == anotherDisplay.positionY) {
-        anotherDisplay.positionY = display.positionY + display.resolutionY;
-      }
-    }
-  }
 
   let minPosX = Infinity;
   let minPosY = Infinity;
-  for (const display of displays) {
-    if (display.positionX < minPosX) {
-      minPosX = display.positionX;
+  for (let i = 0; i < displays.length; i++) {
+    const d = displays[i];
+    d.scale = scales[i];
+    if (d.positionX < minPosX) {
+      minPosX = d.positionX;
     }
-    if (display.positionY < minPosY) {
-      minPosY = display.positionY;
+    if (d.positionY < minPosY) {
+      minPosY = d.positionY;
     }
   }
+  for (const d of displays) {
+    d.positionX -= minPosX;
+    d.positionY -= minPosY;
+  }
 
-  for (const display of displays) {
-    display.positionX -= minPosX;
-    display.positionY -= minPosY;
+  for (let i = 0; i < displays.length; i++) {
+    const d = displays[i];
+
+    const oldResX = d.resolutionX;
+    const oldResY = d.resolutionY;
+    d.resolutionX = Math.floor(d.resolutionX * d.scale);
+    d.resolutionY = Math.floor(d.resolutionY * d.scale);
+
+    for (const ad of displays) {
+      if (ad.deviceName == d.deviceName) {
+        continue;
+      }
+      if (d.positionX + oldResX == ad.positionX) {
+        ad.positionX = d.positionX + d.resolutionX;
+      } else if (d.positionX < ad.positionX && ad.positionX < d.positionX + oldResX) {
+        ad.positionX = Math.floor((ad.positionX - d.positionX) * ad.scale) + d.positionX;
+      }
+
+      if (d.positionY + oldResY == ad.positionY) {
+        ad.positionY = d.positionY + d.resolutionY;
+      } else if (d.positionY < ad.positionY && ad.positionY < d.positionY + oldResY) {
+        ad.positionY = Math.floor((ad.positionY - d.positionY) * ad.scale) + d.positionY;
+      }
+    }
   }
 }
 
@@ -261,10 +267,9 @@ function getDisplayByPowershell() {
     print(displays);
   }
   fixPositions(displays);
-  if (utils.readConfigItem(config, 'DebugDisplay')) {
-    print('After fixing positions:');
-    print(displays);
-  }
+  print('After fixing positions:');
+  print(displays);
+
   const size = utils.getWallpaperSize(displays);
   print(size);
   if (!utils.readConfigItem(config, 'DebugDisplay')) {
