@@ -228,17 +228,19 @@ function getDisplayByPowershell() {
 
   config = utils.lowerize(config);
 
+  // eslint-disable-next-line guard-for-in
   for (const key in argv) {
-    if (key.toLowerCase() in config) {
+    const realKey = key.toLowerCase().replace(/-/g, '');
+    const v = argv[key];
+    if (realKey in config) {
       try {
         // wrap the scaling factors if not in brackets
-        if (key.toLowerCase() == 'scaling' &&
-          !(argv[key].startsWith('[') && argv[key].endsWith(']'))) {
-          argv[key] = `[${argv[key]}]`;
+        if (realKey == 'scaling' && !(v.startsWith('[') && v.endsWith(']'))) {
+          v = `[${v}]`;
         }
-        config[key.toLowerCase()] = JSON.parse(argv[key]);
+        config[realKey] = JSON.parse(v);
       } catch (SyntaxError) {
-        config[key.toLowerCase()] = argv[key];
+        config[realKey] = v;
       }
     }
   }
