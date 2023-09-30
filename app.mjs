@@ -34,17 +34,12 @@ let pexelsClient;
 let config;
 
 function fixPositions(displays) {
-  const scales = utils.readConfigItem(config, 'Scaling');
-  if (displays.length != scales.length) {
-    throw new Error('Mismatching scaling and display count');
-  }
-
-
   let minPosX = Infinity;
   let minPosY = Infinity;
   for (let i = 0; i < displays.length; i++) {
     const d = displays[i];
-    d.scale = scales[i];
+    const scale = execSync(`bin\\SetDpi.exe value ${i+1}`).toString();
+    d.scale = parseInt(scale)/100;
     if (d.positionX < minPosX) {
       minPosX = d.positionX;
     }
@@ -240,10 +235,6 @@ function getDisplayByPowershell() {
     const v = argv[key];
     if (realKey in config) {
       try {
-        // wrap the scaling factors if not in brackets
-        if (realKey == 'scaling' && !(v.startsWith('[') && v.endsWith(']'))) {
-          v = `[${v}]`;
-        }
         config[realKey] = JSON.parse(v);
       } catch (SyntaxError) {
         config[realKey] = v;

@@ -8,11 +8,6 @@ Keyword: south america
 UseProxy: true
 # Proxy server.
 Proxy: http://127.0.0.1:1080
-# Set your scaling, each line for a display, staring from Display 1
-Scaling:
-  - 1.0
-  - 1.5
-  - 2
 # Should wallpapers be reused on displays
 NoRepeat: true
 # Maximum disk space for wallpapers in megabytes
