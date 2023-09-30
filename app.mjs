@@ -34,34 +34,48 @@ let pexelsClient;
 let config;
 
 function fixPositions(displays) {
-  const scales = utils.readConfigItem(config, 'Scaling');
-  if (displays.length != scales.length) {
-    throw new Error('Mismatching scaling and display count');
-  }
-
   let minPosX = Infinity;
   let minPosY = Infinity;
-  for (let i =0; i < displays.length; i++) {
-    const display = displays[i];
-
-    if (scales) {
-      display.resolutionX = Math.ceil(display.resolutionX * scales[i]);
-      display.resolutionY = Math.ceil(display.resolutionY * scales[i]);
-      display.positionX = Math.ceil(display.positionX * scales[0]);
-      display.positionY = Math.ceil(display.positionY * scales[0]);
+  for (let i = 0; i < displays.length; i++) {
+    const d = displays[i];
+    const scale = execSync(`bin\\SetDpi.exe value ${i+1}`).toString();
+    d.scale = parseInt(scale)/100;
+    if (d.positionX < minPosX) {
+      minPosX = d.positionX;
     }
-
-    if (display.positionX < minPosX) {
-      minPosX = display.positionX;
-    }
-    if (display.positionY < minPosY) {
-      minPosY = display.positionY;
+    if (d.positionY < minPosY) {
+      minPosY = d.positionY;
     }
   }
+  for (const d of displays) {
+    d.positionX -= minPosX;
+    d.positionY -= minPosY;
+  }
 
-  for (const display of displays) {
-    display.positionX -= minPosX;
-    display.positionY -= minPosY;
+  for (let i = 0; i < displays.length; i++) {
+    const d = displays[i];
+
+    const oldResX = d.resolutionX;
+    const oldResY = d.resolutionY;
+    d.resolutionX = Math.floor(d.resolutionX * d.scale);
+    d.resolutionY = Math.floor(d.resolutionY * d.scale);
+
+    for (const ad of displays) {
+      if (ad.deviceName == d.deviceName) {
+        continue;
+      }
+      if (d.positionX + oldResX == ad.positionX) {
+        ad.positionX = d.positionX + d.resolutionX;
+      } else if (d.positionX < ad.positionX && ad.positionX < d.positionX + oldResX) {
+        ad.positionX = Math.floor((ad.positionX - d.positionX) * ad.scale) + d.positionX;
+      }
+
+      if (d.positionY + oldResY == ad.positionY) {
+        ad.positionY = d.positionY + d.resolutionY;
+      } else if (d.positionY < ad.positionY && ad.positionY < d.positionY + oldResY) {
+        ad.positionY = Math.floor((ad.positionY - d.positionY) * ad.scale) + d.positionY;
+      }
+    }
   }
 }
 
@@ -215,17 +229,15 @@ function getDisplayByPowershell() {
 
   config = utils.lowerize(config);
 
+  // eslint-disable-next-line guard-for-in
   for (const key in argv) {
-    if (key.toLowerCase() in config) {
+    const realKey = key.toLowerCase().replace(/-/g, '');
+    const v = argv[key];
+    if (realKey in config) {
       try {
-        // wrap the scaling factors if not in brackets
-        if (key.toLowerCase() == 'scaling' &&
-          !(argv[key].startsWith('[') && argv[key].endsWith(']'))) {
-          argv[key] = `[${argv[key]}]`;
-        }
-        config[key.toLowerCase()] = JSON.parse(argv[key]);
+        config[realKey] = JSON.parse(v);
       } catch (SyntaxError) {
-        config[key.toLowerCase()] = argv[key];
+        config[realKey] = v;
       }
     }
   }
@@ -241,12 +253,20 @@ function getDisplayByPowershell() {
 
   prepare();
   const displays = getDisplayByPowershell();
+  if (utils.readConfigItem(config, 'DebugDisplay')) {
+    print('Before fixing positions:');
+    print(displays);
+  }
   fixPositions(displays);
+  print('After fixing positions:');
   print(displays);
+
   const size = utils.getWallpaperSize(displays);
   print(size);
-  const tmpFilepath = await generateWallpaper(size, displays);
-  await setWallpaper(tmpFilepath);
+  if (!utils.readConfigItem(config, 'DebugDisplay')) {
+    const tmpFilepath = await generateWallpaper(size, displays);
+    await setWallpaper(tmpFilepath);
+  }
 })();
 
 

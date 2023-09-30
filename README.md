@@ -29,16 +29,16 @@ This tool can help you get perfect wallpaper set. The wallpapers are searched an
 `npm install -g charm-mm` 
 ## Usage 
   ```
-  charm-mm --config config.yml
+  charm-mm -c config.yml
   ```
   Read *config.yml.sample* and modify it to create *config.yml*.
 
-  Any parameter defined in config.yml can be override at runtime with command line arguments. For example, to override scaling settings:
+  Any parameter defined in config.yml can be override at runtime with command line arguments. For example, to override the keyword settings:
   ```
-  charm-mm --config config.yml --Scaling [1.0, 2.0]
+  charm-mm -c config.yml --keyword=sea
   ```
   
-  The options are **case-sensitive** and should match the keys in config.yml. 
+  The options are **case-insensitive** when specifying at command line. 
 ## [Changelog](./CHANGELOG)
 
 ## Troubleshooting
@@ -58,7 +58,9 @@ That's due to PowerShell execution restrictions. To solve, as suggested in the e
 ```
 Set-ExecutionPolicy -ExecutionPolicy AllSigned -Scope CurrentUser
 ```
-
+## Credit 
+- https://github.com/imniko/SetDPI \
+  The binary release in included to get the DPI of monitors
 
 ## License
 [MIT License](./LICENSE)
