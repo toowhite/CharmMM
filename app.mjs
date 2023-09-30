@@ -241,12 +241,21 @@ function getDisplayByPowershell() {
 
   prepare();
   const displays = getDisplayByPowershell();
+  if (utils.readConfigItem(config, 'DebugDisplay')) {
+    print('Before fixing positions:');
+    print(displays);
+  }
   fixPositions(displays);
-  print(displays);
+  if (utils.readConfigItem(config, 'DebugDisplay')) {
+    print('After fixing positions:');
+    print(displays);
+  }
   const size = utils.getWallpaperSize(displays);
   print(size);
-  const tmpFilepath = await generateWallpaper(size, displays);
-  await setWallpaper(tmpFilepath);
+  if (!utils.readConfigItem(config, 'DebugDisplay')) {
+    const tmpFilepath = await generateWallpaper(size, displays);
+    await setWallpaper(tmpFilepath);
+  }
 })();
 
 
