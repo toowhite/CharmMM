@@ -39,18 +39,31 @@ function fixPositions(displays) {
     throw new Error('Mismatching scaling and display count');
   }
 
+  for (let i = 0; i < displays.length; i++) {
+    const display = displays[i];
+    display.scale = scales[i];
+
+    const oldResX = display.resolutionX;
+    const oldResY = display.resolutionY;
+    display.resolutionX = Math.floor(display.resolutionX * display.scale);
+    display.resolutionY = Math.floor(display.resolutionY * display.scale);
+
+    for (const anotherDisplay of displays) {
+      if (anotherDisplay.deviceName == display) {
+        continue;
+      }
+      if (display.positionX + oldResX == anotherDisplay.positionX) {
+        anotherDisplay.positionX = display.positionX + display.resolutionX;
+      }
+      if (display.positionY + oldResY == anotherDisplay.positionY) {
+        anotherDisplay.positionY = display.positionY + display.resolutionY;
+      }
+    }
+  }
+
   let minPosX = Infinity;
   let minPosY = Infinity;
-  for (let i =0; i < displays.length; i++) {
-    const display = displays[i];
-
-    if (scales) {
-      display.resolutionX = Math.ceil(display.resolutionX * scales[i]);
-      display.resolutionY = Math.ceil(display.resolutionY * scales[i]);
-      display.positionX = Math.ceil(display.positionX * scales[0]);
-      display.positionY = Math.ceil(display.positionY * scales[0]);
-    }
-
+  for (const display of displays) {
     if (display.positionX < minPosX) {
       minPosX = display.positionX;
     }
