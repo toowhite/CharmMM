@@ -1,6 +1,6 @@
 {
   "name": "charm-mm",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "CharmMM is a tool to perfectly set Windows wallpaper on multi displays/monitors.",
   "type": "module",
   "main": "app.mjs",
