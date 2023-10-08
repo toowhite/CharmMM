@@ -23,9 +23,12 @@ process.on('uncaughtException', function(err) {
   process.exit(1);
 });
 
-const print = console.log;
+const log = console.log;
+const logCommand = (command) => {
+  log(`Executing command: ${command}`);
+};
 const FILENAME = fileURLToPath(import.meta.url);
-const DIRNAME = dirname(FILENAME).replace(/ /g, '` ');
+const DIRNAME = dirname(FILENAME);
 const WALLPAPER_FOLDER = join(os.homedir(), 'Pictures', 'charm-mm-wallpapers');
 const DEFINED_SHARP_FIT_MODE = ['cover', 'contain', 'fill', 'inside', 'outside'];
 const MAX_PER_PAGE = 80; // according to Pexels documentations
@@ -38,8 +41,8 @@ function fixPositions(displays) {
   let minPosY = Infinity;
   for (let i = 0; i < displays.length; i++) {
     const d = displays[i];
-    const command = `${join(DIRNAME, 'bin', 'SetDpi.exe')} value ${i+1}`;
-    print('Executing command: ' + command);
+    const command = `"${join(DIRNAME, 'bin', 'SetDpi.exe')}" value ${i+1}`;
+    logCommand(command);
     const scale = execSync(command).toString();
     d.scale = parseInt(scale)/100;
     if (d.positionX < minPosX) {
@@ -81,7 +84,7 @@ async function pickRandomPhoto(landscapeDisplay, keyword) {
   const wantedPage = Math.floor(photoIndex / MAX_PER_PAGE) + 1;
   const wantedIndexInPage = photoIndex % MAX_PER_PAGE;
 
-  print(`${result.total_results} photos found. Picked the ${photoIndex} th photo, therefore pick ${wantedIndexInPage} th in page ${wantedPage}`);
+  log(`${result.total_results} photos found. Picked the ${photoIndex} th photo, therefore pick ${wantedIndexInPage} th in page ${wantedPage}`);
 
   if (wantedPage != 1) {
     result = await pexelsClient.photos.search({
@@ -126,7 +129,7 @@ async function generateWallpaper(size, displays) {
     pickedSet.add(picked.id);
 
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
-    print(`${deviceName} will use wallpaper ${picked.src.original}`);
+    log(`${deviceName} will use wallpaper ${picked.src.original}`);
 
     const dest = join(WALLPAPER_FOLDER, `${picked.id}.jpg`);
     if (!fs.existsSync(dest)) {
@@ -140,7 +143,7 @@ async function generateWallpaper(size, displays) {
         wgetCommand.push(`-e http_proxy=${proxy} -e https_proxy=${proxy}`);
       }
       wgetCommand = wgetCommand.join(' ');
-      print(`Executing command: ${wgetCommand}`);
+      logCommand(wgetCommand);
       execSync(wgetCommand);
     }
     if (DEFINED_SHARP_FIT_MODE.includes(fitMode)) {
@@ -159,22 +162,22 @@ async function generateWallpaper(size, displays) {
 
   const tmpFilePath = join(DIRNAME, '_tmp.jpg');
   const info = await image.composite(compositeArray).toFile(tmpFilePath);
-  print(info);
+  log(info);
   return tmpFilePath;
 }
 
 function prepare() {
   if (!fs.existsSync(WALLPAPER_FOLDER)) {
-    print('Wallpaper folder doesn\'t exist, creating one...');
+    log('Wallpaper folder doesn\'t exist, creating one...');
     fs.mkdirSync(WALLPAPER_FOLDER);
   }
 
   const wallpaperSize = utils.bytesToMegaBytes(utils.dirSize(WALLPAPER_FOLDER));
-  print(`Wallpaper folder path is ${WALLPAPER_FOLDER}, occupying ${wallpaperSize} MB`);
+  log(`Wallpaper folder path is ${WALLPAPER_FOLDER}, occupying ${wallpaperSize} MB`);
 
   const diskStorageLimit = utils.readConfigItem(config, 'DiskStorageLimit', 'NO LIMIT');
   if (diskStorageLimit != 'NO LIMIT' && wallpaperSize > diskStorageLimit) {
-    print(`wallpaper folder size (${wallpaperSize} MB) exceeds limit ${diskStorageLimit} MB, pruning...`);
+    log(`wallpaper folder size (${wallpaperSize} MB) exceeds limit ${diskStorageLimit} MB, pruning...`);
     prune(wallpaperSize, diskStorageLimit);
   }
 }
@@ -185,15 +188,15 @@ function prune(currSize, diskStorageLimit) {
     const file = sortedFiles.shift();
     const sizeInMB = utils.bytesToMegaBytes(file.stats.size);
     fs.unlinkSync(file.path);
-    print(`${file.path} deleted, saving ${sizeInMB} MB`);
+    log(`${file.path} deleted, saving ${sizeInMB} MB`);
     currSize -= sizeInMB;
   } while (currSize > diskStorageLimit);
 }
 
 function getDisplayByPowershell() {
-  const scriptPath = join(DIRNAME, 'GetDisplays.ps1');
+  const scriptPath = join(DIRNAME.replace(/ /g, '` '), 'GetDisplays.ps1');
   const command = `powershell.exe "${scriptPath}"`;
-  print('Executing command: ' + command);
+  logCommand(command);
   const rawLogs = execSync(command);
   return utils.rawDisplayLogsToDictionary(rawLogs.toString());
 }
@@ -211,7 +214,7 @@ function getDisplayByPowershell() {
       })
       .argv;
   argv.config = argv.config ? argv.config : 'config.yml';
-  print(`Using config file: ${argv.config}`);
+  log(`Using config file: ${argv.config}`);
   config = yaml.load(fs.readFileSync(argv.config, 'utf-8'));
 
   config = utils.lowerize(config);
@@ -229,7 +232,7 @@ function getDisplayByPowershell() {
     }
   }
 
-  print(config);
+  log(config);
 
   const useProxy = utils.readConfigItem(config, 'UseProxy', false);
   if (useProxy) {
@@ -241,15 +244,15 @@ function getDisplayByPowershell() {
   prepare();
   const displays = getDisplayByPowershell();
   if (utils.readConfigItem(config, 'DebugDisplay')) {
-    print('Before fixing positions:');
-    print(displays);
+    log('Before fixing positions:');
+    log(displays);
   }
   fixPositions(displays);
-  print('After fixing positions:');
-  print(displays);
+  log('After fixing positions:');
+  log(displays);
 
   const size = utils.getWallpaperSize(displays);
-  print(size);
+  log(size);
   if (!utils.readConfigItem(config, 'DebugDisplay')) {
     const tmpFilepath = await generateWallpaper(size, displays);
     await setWallpaper(tmpFilepath);
