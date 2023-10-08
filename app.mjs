@@ -54,30 +54,15 @@ function fixPositions(displays) {
     d.positionY -= minPosY;
   }
 
+  const positionScaler = displays[0].scale;
   for (let i = 0; i < displays.length; i++) {
     const d = displays[i];
 
-    const oldResX = d.resolutionX;
-    const oldResY = d.resolutionY;
     d.resolutionX = Math.floor(d.resolutionX * d.scale);
     d.resolutionY = Math.floor(d.resolutionY * d.scale);
 
-    for (const ad of displays) {
-      if (ad.deviceName == d.deviceName) {
-        continue;
-      }
-      if (d.positionX + oldResX == ad.positionX) {
-        ad.positionX = d.positionX + d.resolutionX;
-      } else if (d.positionX < ad.positionX && ad.positionX < d.positionX + oldResX) {
-        ad.positionX = Math.floor((ad.positionX - d.positionX) * ad.scale) + d.positionX;
-      }
-
-      if (d.positionY + oldResY == ad.positionY) {
-        ad.positionY = d.positionY + d.resolutionY;
-      } else if (d.positionY < ad.positionY && ad.positionY < d.positionY + oldResY) {
-        ad.positionY = Math.floor((ad.positionY - d.positionY) * ad.scale) + d.positionY;
-      }
-    }
+    d.positionX = Math.floor(positionScaler * d.positionX);
+    d.positionY = Math.floor(positionScaler * d.positionY);
   }
 }
 
@@ -190,7 +175,7 @@ function prepare() {
   const diskStorageLimit = utils.readConfigItem(config, 'DiskStorageLimit', 'NO LIMIT');
   if (diskStorageLimit != 'NO LIMIT' && wallpaperSize > diskStorageLimit) {
     print(`wallpaper folder size (${wallpaperSize} MB) exceeds limit ${diskStorageLimit} MB, pruning...`);
-    prune(wallpaperSize);
+    prune(wallpaperSize, diskStorageLimit);
   }
 }
 
