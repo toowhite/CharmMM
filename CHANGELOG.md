@@ -13,3 +13,12 @@ From v1.4.0 forwards, all notable changes to this project will be documented in 
 - Improve position calculation
 - Add DebugDisplay config
 - Allow hyper in config key at command line
+
+# 1.6.1
+- Try fixing position calculation (not successful)
+
+# 1.7.0
+- Add support for using last photos ids
+- Try fixing position again
+- Fix storage trimming not working
+- Refactor logging
