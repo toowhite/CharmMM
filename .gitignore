@@ -105,7 +105,7 @@ dist
 
 .vs/
 .jpg
-_tmp.jpg
+_tmp_*.jpg
 obj/
 
 wallpapers/*

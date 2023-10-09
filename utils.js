@@ -118,7 +118,7 @@ function bytesToMegaBytes(bytes) {
 }
 
 function readConfigItem(config, key, defaultValue = null) {
-  config = lowerize(config);
+  config = lowerKeys(config);
 
   try {
     if (key.toLowerCase() in config) {
@@ -136,11 +136,19 @@ function readConfigItem(config, key, defaultValue = null) {
 }
 
 // Thanks to https://www.30secondsofcode.org/js/s/lowerize/
-function lowerize(obj) {
+function lowerKeys(obj) {
   return Object.keys(obj).reduce((acc, k) => {
     acc[k.toLowerCase()] = obj[k];
     return acc;
   }, {});
+}
+
+
+function parseTmpFilename(filename) {
+  if (!filename.match( /_tmp_(\d+,?)+\.jpg/g)) {
+    return null;
+  }
+  return filename.match(/\d+/g).map((x) => parseInt(x));
 }
 
 export default {
@@ -151,5 +159,6 @@ export default {
   getFilesSortedByCreationTime,
   bytesToMegaBytes,
   readConfigItem,
-  lowerize,
+  lowerKeys,
+  parseTmpFilename,
 };
