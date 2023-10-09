@@ -115,19 +115,42 @@ async function generateWallpaper(size, displays) {
   const fitMode = utils.readConfigItem(config, 'FitMode', 'cover');
   const useProxy = utils.readConfigItem(config, 'UseProxy', false);
   const proxy = utils.readConfigItem(config, 'Proxy', 'placeholder');
-  const useLastPhotos = utils.readConfigItem(config, 'UseLastPhotos', false);
 
-  const pickedSet = new Set();
+  let pickedArray = [];
+  let useRecoveredPhotoIds = false;
+  if (utils.readConfigItem(config, 'UseLastPhotos', false)) {
+    try {
+      const lastUsedPhotoIds = fs.readdirSync('.').reduce((result, filename) => {
+        const tmp = utils.parseTmpFilename(filename);
+        if (tmp) {
+          result = tmp;
+        }
+        return result;
+      });
+      if (lastUsedPhotoIds.length == displays.length) {
+        useRecoveredPhotoIds = true;
+        pickedArray = lastUsedPhotoIds;
+      }
+    } catch (Error) {
+      log('Attempt to load last used photos ids fails. Pick photos again.');
+    }
+  }
+
   const compositeArray = [];
-  for (const display of displays) {
+  for (let i = 0; i < displays.length; i++) {
+    const display = displays[i];
     const ratio = display.resolutionX / display.resolutionY;
     const landscapeDisplay = utils.landscapeRatio(ratio);
 
     let picked;
-    do {
-      picked = await pickRandomPhoto(landscapeDisplay, keyword);
-    } while (noRepeat && pickedSet.has(picked.id));
-    pickedSet.add(picked.id);
+    if (useRecoveredPhotoIds) {
+      picked = await pexelsClient.photos.show({id: pickedArray[i]});
+    } else {
+      do {
+        picked = await pickRandomPhoto(landscapeDisplay, keyword);
+      } while (noRepeat && pickedArray.includes(picked.id));
+      pickedArray.push(picked.id);
+    }
 
     const deviceName = display.deviceName.replace(/[\.\\]/g, '');
     log(`${deviceName} will use wallpaper ${picked.src.original}`);
@@ -161,7 +184,7 @@ async function generateWallpaper(size, displays) {
     }
   }
 
-  const tmpFilePath = join(DIRNAME, `_tmp_${Array.from(pickedSet).join(',')}.jpg`);
+  const tmpFilePath = join(DIRNAME, `_tmp_${pickedArray.join(',')}.jpg`);
   const info = await image.composite(compositeArray).toFile(tmpFilePath);
   log(info);
   return tmpFilePath;
