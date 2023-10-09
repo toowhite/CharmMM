@@ -115,6 +115,7 @@ async function generateWallpaper(size, displays) {
   const fitMode = utils.readConfigItem(config, 'FitMode', 'cover');
   const useProxy = utils.readConfigItem(config, 'UseProxy', false);
   const proxy = utils.readConfigItem(config, 'Proxy', 'placeholder');
+  const useLastPhotos = utils.readConfigItem(config, 'UseLastPhotos', false);
 
   const pickedSet = new Set();
   const compositeArray = [];
@@ -160,7 +161,7 @@ async function generateWallpaper(size, displays) {
     }
   }
 
-  const tmpFilePath = join(DIRNAME, '_tmp.jpg');
+  const tmpFilePath = join(DIRNAME, `_tmp_${Array.from(pickedSet).join(',')}.jpg`);
   const info = await image.composite(compositeArray).toFile(tmpFilePath);
   log(info);
   return tmpFilePath;
@@ -217,7 +218,7 @@ function getDisplayByPowershell() {
   log(`Using config file: ${argv.config}`);
   config = yaml.load(fs.readFileSync(argv.config, 'utf-8'));
 
-  config = utils.lowerize(config);
+  config = utils.lowerKeys(config);
 
   // eslint-disable-next-line guard-for-in
   for (const key in argv) {

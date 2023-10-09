@@ -13,6 +13,19 @@
             ],
             "program": "${workspaceFolder}\\app.mjs",
             "args": ["--config", "config.yml"]
-        }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Jest: current file",
+            "env": { "NODE_OPTIONS": "--experimental-vm-modules" },
+            "program": "${workspaceFolder}/node_modules/.bin/jest",
+            // "args": ["${fileBasenameNoExtension}", "--config", "jest.config.js"],
+            "console": "integratedTerminal",
+            // "disableOptimisticBPs": true,
+            "windows": {
+              "program": "${workspaceFolder}/node_modules/jest/bin/jest"
+            }
+          }
     ]
 }

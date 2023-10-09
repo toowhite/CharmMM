@@ -73,6 +73,13 @@ WorkingArea  : {X=-1440,Y=-764,Width=1080,Height=1920}`;
   ]);
 });
 
+describe('parse tmp file name', () => {
+  it('should correctly parse filename "_tmp_1,2,3.jpg"', () => {
+    const input = '_tmp_1,2,3.jpg';
+    const expected = [1, 2, 3];
+    expect(utils.parseTmpFilename(input)).toEqual(expected);
+  });
+});
 
 describe('read config item', () => {
   let config;
@@ -103,25 +110,25 @@ describe('read config item', () => {
 describe('lowerize keys of an object', () => {
   test('Lowerize an empty object', () => {
     const input = {};
-    const output = utils.lowerize(input);
+    const output = utils.lowerKeys(input);
     expect(output).toEqual({});
   });
 
   test('Lowerize an object with mixed case keys', () => {
     const input = {Name: 'John', Age: 30, email: 'john@example.com'};
-    const output = utils.lowerize(input);
+    const output = utils.lowerKeys(input);
     expect(output).toEqual({name: 'John', age: 30, email: 'john@example.com'});
   });
 
   test('Lowerize an object with all lowercase keys', () => {
     const input = {firstname: 'Alice', lastname: 'Smith', email: 'alice@example.com'};
-    const output = utils.lowerize(input);
+    const output = utils.lowerKeys(input);
     expect(output).toEqual(input);
   });
 
   test('Lowerize an object with uppercase keys', () => {
     const input = {FIRSTNAME: 'Bob', LASTNAME: 'Johnson', EMAIL: 'bob@example.com'};
-    const output = utils.lowerize(input);
+    const output = utils.lowerKeys(input);
     expect(output).toEqual({firstname: 'Bob', lastname: 'Johnson', email: 'bob@example.com'});
   });
 });

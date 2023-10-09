@@ -14,3 +14,4 @@ NoRepeat: true
 DiskStorageLimit: 100
 # Only print information for debugging display sizes
 DebugDisplay: false
+UseLastPhotos: true
