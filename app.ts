@@ -136,6 +136,42 @@ async function pickRandomPhoto(
   return result.photos[wantedIndexInPage];
 }
 
+async function downloadPhotoIfNeeded(
+  photo: Photo,
+  dest: string,
+  useProxy: boolean,
+  proxy: string
+) {
+  if (!fs.existsSync(dest)) {
+    let wgetCommand = [
+      "wget",
+      photo.src.original,
+      "-O",
+      `"${dest}"`,
+      '--header="Accept: text/html"',
+      '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"',
+      "--no-verbose",
+    ];
+    if (useProxy) {
+      wgetCommand.push(`-e http_proxy=${proxy} -e https_proxy=${proxy}`);
+    }
+    const wgetCommandStr = wgetCommand.join(" ");
+    logCommand(wgetCommandStr);
+    execSync(wgetCommandStr);
+  }
+}
+
+async function resizePhotoToBuffer(
+  dest: string,
+  width: number,
+  height: number,
+  fitMode: string
+) {
+  return sharp(dest)
+    .resize(width, height, { fit: fitMode as any })
+    .toBuffer();
+}
+
 async function generateWallpaper(
   size: Size,
   displays: Display[]
@@ -200,29 +236,15 @@ async function generateWallpaper(
     log(`${deviceName} will use wallpaper ${picked.src.original}`);
 
     const dest = join(WALLPAPER_FOLDER, `${picked.id}.jpg`);
-    if (!fs.existsSync(dest)) {
-      let wgetCommand = [
-        "wget",
-        picked.src.original,
-        "-O",
-        `"${dest}"`,
-        '--header="Accept: text/html"',
-        '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"',
-        "--no-verbose",
-      ];
-      if (useProxy) {
-        wgetCommand.push(`-e http_proxy=${proxy} -e https_proxy=${proxy}`);
-      }
-      const wgetCommandStr = wgetCommand.join(" ");
-      logCommand(wgetCommandStr);
-      execSync(wgetCommandStr);
-    }
+    await downloadPhotoIfNeeded(picked, dest, useProxy, proxy);
+
     if (DEFINED_SHARP_FIT_MODE.includes(fitMode)) {
-      const picData = await sharp(dest)
-        .resize(display.resolutionX, display.resolutionY, {
-          fit: fitMode as any,
-        })
-        .toBuffer();
+      const picData = await resizePhotoToBuffer(
+        dest,
+        display.resolutionX ?? 1,
+        display.resolutionY ?? 1,
+        fitMode
+      );
       compositeArray.push({
         input: picData,
         left: display.positionX,
@@ -287,47 +309,58 @@ function getDisplayByPowershell(): Display[] {
   }));
 }
 
-(async () => {
+async function loadAndMergeConfig(argvRaw: any) {
+  argvRaw.config = argvRaw.config ? argvRaw.config : "config.yml";
+  log(`Using config file: ${argvRaw.config}`);
+  let loadedConfig = yaml.load(fs.readFileSync(argvRaw.config, "utf-8"));
+  loadedConfig = lowerKeys(loadedConfig);
+  // Fix: assert type for loadedConfig
+  const configObj = loadedConfig as Record<string, any>;
+  // Merge CLI args into config
+  for (const key in argvRaw) {
+    const realKey = key.toLowerCase().replace(/-/g, "");
+    const v = argvRaw[key];
+    if (realKey in configObj) {
+      try {
+        configObj[realKey] = JSON.parse(v);
+      } catch (SyntaxError) {
+        configObj[realKey] = v;
+      }
+    }
+  }
+  return configObj;
+}
+
+async function main() {
+  // Parse CLI arguments
   const argv = yargs(hideBin(process.argv))
     .usage("Usage: $0 --config <configFile>")
-    .strict(false) // Allow unknown options
+    .strict(false)
     .option("config", {
       alias: "c",
       demandOption: false,
       describe: "Specify the configuration file",
       type: "string",
     }).argv;
-  // Fix argv type issue
   const argvRaw = (await Promise.resolve(argv)) as any;
-  argvRaw.config = argvRaw.config ? argvRaw.config : "config.yml";
-  log(`Using config file: ${argvRaw.config}`);
-  config = yaml.load(fs.readFileSync(argvRaw.config, "utf-8"));
 
-  config = lowerKeys(config);
-
-  // eslint-disable-next-line guard-for-in
-  for (const key in argvRaw) {
-    const realKey = key.toLowerCase().replace(/-/g, "");
-    const v = argvRaw[key];
-    if (realKey in config) {
-      try {
-        config[realKey] = JSON.parse(v);
-      } catch (SyntaxError) {
-        config[realKey] = v;
-      }
-    }
-  }
-
+  // Load and merge config
+  config = await loadAndMergeConfig(argvRaw);
   log(config);
 
+  // Proxy setup if needed
   const useProxy = readConfigItem(config, "UseProxy", false);
   if (useProxy) {
     setGlobalDispatcher(new ProxyAgent(readConfigItem(config, "Proxy")));
   }
 
+  // Pexels client
   pexelsClient = createClient(readConfigItem(config, "PEXELS_API_KEY"));
 
+  // Prepare wallpaper folder and prune if needed
   prepare();
+
+  // Get display info
   const displays = getDisplayByPowershell();
   if (readConfigItem(config, "DebugDisplay")) {
     log("Before fixing positions:");
@@ -337,10 +370,19 @@ function getDisplayByPowershell(): Display[] {
   log("After fixing positions:");
   log(displays);
 
+  // Calculate wallpaper size
   const size = getWallpaperSize(displays);
   log(size);
+
+  // If not in debug mode, generate and set wallpaper
   if (!readConfigItem(config, "DebugDisplay")) {
     const tmpFilepath = await generateWallpaper(size, displays);
     await setWallpaper(tmpFilepath);
   }
-})();
+}
+
+// Main async entrypoint
+main().catch((err) => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});
